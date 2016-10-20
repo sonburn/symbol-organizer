@@ -79,7 +79,7 @@ var onRun = function(context) {
 				var y = 0;
 				var xPad = parseInt(layoutSettings.xPad);
 				var yPad = parseInt(layoutSettings.yPad);
-				var rowHeight = 0;
+				var groupSpace = 0;
 
 				// Reset the group counter
 				var groupCount = 1;
@@ -90,29 +90,56 @@ var onRun = function(context) {
 					var symbol = layoutSymbols.objectAtIndex(i);
 					var symbolFrame = symbol.frame();
 
-					// If the current group number doesn't match the group counter
-					if (groupLayout[i]['group'] != groupCount) {
-						// Reset x position, set the y position of the next row, reset the row height
-						x = 0;
-						y += rowHeight + yPad;
-						rowHeight = 0;
+					// Layout symbols horizontally or vertically
+					if (layoutSettings.sortDirection == 0) {
+						// If the current group number doesn't match the group counter
+						if (groupLayout[i]['group'] != groupCount) {
+							// Reset x position, set the y position of the next row, reset the row height
+							y = 0;
+							x += groupSpace + xPad;
+							groupSpace = 0;
 
-						// Increment the group counter
-						groupCount++;
+							// Increment the group counter
+							groupCount++;
+						}
+
+						// Position the symbol
+						symbolFrame.x = x;
+						symbolFrame.y = y;
+
+						// If this symbol is taller than previous symbols in row
+						if (symbolFrame.width() > groupSpace) {
+							// Increase the height of the row
+							groupSpace = symbolFrame.width();
+						}
+
+						// Set the x position for the next symbol
+						y += symbolFrame.height() + yPad;
+					} else {
+						// If the current group number doesn't match the group counter
+						if (groupLayout[i]['group'] != groupCount) {
+							// Reset x position, set the y position of the next row, reset the row height
+							x = 0;
+							y += groupSpace + yPad;
+							groupSpace = 0;
+
+							// Increment the group counter
+							groupCount++;
+						}
+
+						// Position the symbol
+						symbolFrame.x = x;
+						symbolFrame.y = y;
+
+						// If this symbol is taller than previous symbols in row
+						if (symbolFrame.height() > groupSpace) {
+							// Increase the height of the row
+							groupSpace = symbolFrame.height();
+						}
+
+						// Set the x position for the next symbol
+						x += symbolFrame.width() + xPad;
 					}
-
-					// Position the symbol
-					symbolFrame.x = x;
-					symbolFrame.y = y;
-
-					// If this symbol is taller than previous symbols in row
-					if (symbolFrame.height() > rowHeight) {
-						// Increase the height of the row
-						rowHeight = symbolFrame.height();
-					}
-
-					// Set the x position for the next symbol
-					x += symbolFrame.width() + xPad;
 				}
 
 				// Feedback to user
@@ -126,8 +153,11 @@ var onRun = function(context) {
 
 		[alertWindow setMessageText:@'Organize Symbols'];
 
-		[alertWindow addTextLabelWithValue:@'Select a layer sort order:'];
+		[alertWindow addTextLabelWithValue:@'Sort order:'];
 		[alertWindow addAccessoryView: createRadioButtons(['A-Z','Z-A'],1)];
+
+		[alertWindow addTextLabelWithValue:@'Sort direction:'];
+		[alertWindow addAccessoryView: createRadioButtons(['Horizontal','Vertical'],1)];
 
 		[alertWindow addTextLabelWithValue:@'Horizontal spacing:'];
 		[alertWindow addAccessoryView: createField('100')];
@@ -143,8 +173,9 @@ var onRun = function(context) {
 		if (responseCode == 1000) {
 			return {
 				sortOrder : [[[alertWindow viewAtIndex:1] selectedCell] tag],
-				xPad : [[alertWindow viewAtIndex:3] stringValue],
-				yPad : [[alertWindow viewAtIndex:5] stringValue]
+				sortDirection : [[[alertWindow viewAtIndex:3] selectedCell] tag],
+				xPad : [[alertWindow viewAtIndex:5] stringValue],
+				yPad : [[alertWindow viewAtIndex:7] stringValue]
 			}
 		} else return false;
 	}
