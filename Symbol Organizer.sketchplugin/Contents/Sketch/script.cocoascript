@@ -29,8 +29,25 @@ var onRun = function(context) {
 
 			// If layout settings were provided...
 			if (layoutSettings) {
+				// Remove unused symbols
+				if (layoutSettings.removeSymbols == 1) {
+					var removedCount = 0;
+
+					for (var i=0; i < symbols.count(); i++) {
+						var symbol = symbols.objectAtIndex(i);
+
+						if (!symbol.hasInstances()) {
+							symbol.removeFromParent();
+							removedCount++;
+						}
+					}
+
+					symbols = page.artboards();
+					symbolCount = symbols.count();
+				}
+
 				// Duplicate symbols object
-				var layoutSymbols = symbols;
+				var layoutSymbols = page.artboards();
 
 				// Sort new symbols object by name
 				var sortByName = [NSSortDescriptor sortDescriptorWithKey:"name" ascending:1];
@@ -144,18 +161,27 @@ var onRun = function(context) {
 				}
 
 				// Feedback to user
-				doc.showMessage("Symbol layout complete!");
+				if (layoutSettings.removeSymbols == 1 && removedCount > 0) {
+					doc.showMessage("Symbol layout complete! " + removedCount + " unused symbols were removed.");
+				} else {
+					doc.showMessage("Symbol layout complete!");
+				}
 			}
 		}
 	}
 
 	function getLayoutSettings() {
 		// Setting variables
+		//var groupOptions = ['Level 1/','Level 1/Level 2/','Level 1/Level 2/Level 3/'];
+		var groupOptions = ['Label/','Label/Label/','Label/Label/Label/','Label/Label/Label/Label/'];
 		var groupDepth = 1;
+		var sortOrderOptions = ['A-Z','Z-A'];
 		var sortOrder = 1;
-		var sortDirection = 1;
+		var sortDirectionOptions = ['Horizontal','Vertical'];
+		var sortDirection = 0;
 		var xPad = '100';
 		var yPad = '100';
+		var removeSymbols = 0;
 
 		// Get cached settings
 		try {
@@ -178,62 +204,109 @@ var onRun = function(context) {
 			if ([command valueForKey:"yPad" onLayer:page]) {
 				yPad = [command valueForKey:"yPad" onLayer:page];
 			}
+
+			if ([command valueForKey:"removeSymbols" onLayer:page]) {
+				removeSymbols = [command valueForKey:"removeSymbols" onLayer:page];
+			}
 		}
 		catch(err) {
 			log("Unable to fetch settings.");
 		}
 
 		var alertWindow = COSAlertWindow.new();
+		alertWindow.setIcon(NSImage.alloc().initByReferencingFile(context.plugin.urlForResourceNamed("icon.png").path()));
+		alertWindow.setMessageText('Symbol Organizer');
 
-		[alertWindow setMessageText:@'Symbol Organizer'];
+		alertWindow.addTextLabelWithValue('Granularity:');
+		alertWindow.addAccessoryView(createSelect(groupOptions,groupDepth,NSMakeRect(0,0,180,25)));
+		var fieldOne = alertWindow.viewAtIndex(1);
 
-		[alertWindow addTextLabelWithValue:@'Group depth:'];
-		[alertWindow addAccessoryView: createRadioButtons(['Level 1/','Level 1/Level 2/','Level 1/Level 2/Level 3/'],groupDepth)];
+		alertWindow.addTextLabelWithValue('Sort order:');
+		alertWindow.addAccessoryView(createRadioButtons(sortOrderOptions,sortOrder));
+		var fieldTwo = alertWindow.viewAtIndex(3);
 
-		[alertWindow addTextLabelWithValue:@'Sort order:'];
-		[alertWindow addAccessoryView: createRadioButtons(['A-Z','Z-A'],sortOrder)];
+		alertWindow.addTextLabelWithValue('Sort direction:');
+		alertWindow.addAccessoryView(createRadioButtons(sortDirectionOptions,sortDirection));
+		var fieldThree = alertWindow.viewAtIndex(5);
 
-		[alertWindow addTextLabelWithValue:@'Sort direction:'];
-		[alertWindow addAccessoryView: createRadioButtons(['Horizontal','Vertical'],sortDirection)];
+		alertWindow.addTextLabelWithValue('Horizontal spacing:');
+		alertWindow.addAccessoryView(createField(xPad,NSMakeRect(0,0,60,20)));
+		var fieldFour = alertWindow.viewAtIndex(7);
 
-		[alertWindow addTextLabelWithValue:@'Horizontal spacing:'];
-		[alertWindow addAccessoryView: createField(xPad)];
+		alertWindow.addTextLabelWithValue('Vertical spacing:');
+		alertWindow.addAccessoryView(createField(yPad,NSMakeRect(0,0,60,20)));
+		var fieldFive = alertWindow.viewAtIndex(9);
 
-		[alertWindow addTextLabelWithValue:@'Vertical spacing:'];
-		[alertWindow addAccessoryView: createField(yPad)];
+		alertWindow.addAccessoryView(createLabel('',12,NSMakeRect(0,0,0,0)));
+		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols",value:1},removeSymbols,NSMakeRect(0,0,300,20)));
+		var fieldSix = alertWindow.viewAtIndex(11);
 
-		[alertWindow addButtonWithTitle:@'OK'];
-		[alertWindow addButtonWithTitle:@'Cancel'];
+		alertWindow.addButtonWithTitle('OK');
+		alertWindow.addButtonWithTitle('Cancel');
+
+		// Set first responder and key order
+		alertWindow.alert().window().setInitialFirstResponder(fieldOne);
+		fieldOne.setNextKeyView(fieldTwo);
+		fieldTwo.setNextKeyView(fieldThree);
+		fieldThree.setNextKeyView(fieldFour);
+		fieldFour.setNextKeyView(fieldFive);
+		fieldFive.setNextKeyView(fieldSix);
 
 		var responseCode = alertWindow.runModal();
 
 		if (responseCode == 1000) {
 			try {
-				[command setValue:[[[alertWindow viewAtIndex:1] selectedCell] tag] forKey:"groupDepth" onLayer:page];
+				[command setValue:[[alertWindow viewAtIndex:1] indexOfSelectedItem] forKey:"groupDepth" onLayer:page];
 				[command setValue:[[[alertWindow viewAtIndex:3] selectedCell] tag] forKey:"sortOrder" onLayer:page];
 				[command setValue:[[[alertWindow viewAtIndex:5] selectedCell] tag] forKey:"sortDirection" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:7] stringValue] forKey:"xPad" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:9] stringValue] forKey:"yPad" onLayer:page];
+				[command setValue:[[alertWindow viewAtIndex:11] state] forKey:"removeSymbols" onLayer:page];
 			}
 			catch(err) {
 				log("Unable to save settings.");
 			}
 
 			return {
-				groupDepth : [[[alertWindow viewAtIndex:1] selectedCell] tag],
+				groupDepth : [[alertWindow viewAtIndex:1] indexOfSelectedItem],
 				sortOrder : [[[alertWindow viewAtIndex:3] selectedCell] tag],
 				sortDirection : [[[alertWindow viewAtIndex:5] selectedCell] tag],
 				xPad : [[alertWindow viewAtIndex:7] stringValue],
-				yPad : [[alertWindow viewAtIndex:9] stringValue]
+				yPad : [[alertWindow viewAtIndex:9] stringValue],
+				removeSymbols : [[alertWindow viewAtIndex:11] state]
 			}
 		} else return false;
 	}
 
-	function createField(value) {
-		var field = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 100, 20)];
+	function createCheckbox(item,flag,frame) {
+		flag = ( flag == false ) ? NSOffState : NSOnState;
+		var checkbox = [[NSButton alloc] initWithFrame:frame];
+		[checkbox setButtonType: NSSwitchButton];
+		[checkbox setBezelStyle: 0];
+		[checkbox setTitle: item.name];
+		[checkbox setTag: item.value];
+		[checkbox setState: flag];
+
+		return checkbox;
+	}
+
+	function createField(value,frame) {
+		var field = [[NSTextField alloc] initWithFrame:frame];
 		[field setStringValue:value];
 
 		return field;
+	}
+
+	function createLabel(text,size,frame) {
+		var label = [[NSTextField alloc] initWithFrame:frame];
+		[label setStringValue:text];
+		[label setFont:[NSFont boldSystemFontOfSize:size]];
+		[label setBezeled:false];
+		[label setDrawsBackground:false];
+		[label setEditable:false];
+		[label setSelectable:false];
+
+		return label;
 	}
 
 	function createRadioButtons(options,selected) {
@@ -260,6 +333,15 @@ var onRun = function(context) {
 
 		// Return the matrix
 		return buttonMatrix;
+	}
+
+	function createSelect(items,selectedItemIndex,frame) {
+		selectedItemIndex = (selectedItemIndex > -1) ? selectedItemIndex : 0;
+		var comboBox = [[NSComboBox alloc] initWithFrame:frame];
+		[comboBox addItemsWithObjectValues:items];
+		[comboBox selectItemAtIndex:selectedItemIndex];
+
+		return comboBox;
 	}
 
 	function displayDialog(title,body) {

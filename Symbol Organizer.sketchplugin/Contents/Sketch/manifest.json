@@ -3,7 +3,7 @@
 	"commands" : [{
 		"script" : "script.cocoascript",
 		"name" : "Symbol Organizer",
-		"shortcut": "cmd option o",
+		"shortcut": "cmd option shift o",
 		"handlers" : {
 			"run" : "onRun"
 		},
@@ -17,8 +17,8 @@
 		"isRoot" : true
 	},
 	"identifier" : "com.example.sketch.44673736-18ee-470e-b22a-f17fbb378238",
-	"version" : "4.0",
-	"description" : "Organize your symbols page and layer list, based on the symbol names.",
+	"version" : "5.0",
+	"description" : "Organize your symbols page alphabetically (including layer list) and into groupings determined by your symbol names.",
 	"authorEmail" : "jason.burns@synchronoss.com",
 	"name" : "Symbol Organizer"
 }
