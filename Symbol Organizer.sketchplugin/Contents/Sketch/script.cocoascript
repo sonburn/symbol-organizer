@@ -239,6 +239,7 @@ var onRun = function(context) {
 
 		alertWindow.addAccessoryView(createLabel('',12,NSMakeRect(0,0,0,0)));
 		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols",value:1},removeSymbols,NSMakeRect(0,0,300,20)));
+		alertWindow.addTextLabelWithValue('Do not remove symbols if you are using overrides!');
 		var fieldSix = alertWindow.viewAtIndex(11);
 
 		alertWindow.addButtonWithTitle('OK');
