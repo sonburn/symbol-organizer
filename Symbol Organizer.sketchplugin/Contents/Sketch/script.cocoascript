@@ -98,9 +98,11 @@ var onRun = function(context) {
 				var xPad = parseInt(layoutSettings.xPad);
 				var yPad = parseInt(layoutSettings.yPad);
 				var groupSpace = 0;
+				var maxPer = (layoutSettings.maxPer > 0) ? layoutSettings.maxPer : 0;
 
 				// Reset the group counter
 				var groupCount = 1;
+				var objectCount = 1;
 
 				// Iterate through the group object
 				for (var i = 0; i < groupLayout.length; i++) {
@@ -119,6 +121,20 @@ var onRun = function(context) {
 
 							// Increment the group counter
 							groupCount++;
+
+							// Reset the object counter
+							objectCount = 1;
+						}
+
+						// If the max per row is greater than 0, and object count is greater than max per row
+						if (maxPer > 0 && objectCount > maxPer) {
+							// Reset x position, set the y position of the next row, reset the row height
+							y = 0;
+							x += groupSpace + xPad;
+							groupSpace = 0;
+
+							// Reset the object counter
+							objectCount = 1;
 						}
 
 						// Position the symbol
@@ -131,7 +147,7 @@ var onRun = function(context) {
 							groupSpace = symbolFrame.width();
 						}
 
-						// Set the x position for the next symbol
+						// Set the y position for the next symbol
 						y += symbolFrame.height() + yPad;
 					} else {
 						// If the current group number doesn't match the group counter
@@ -143,6 +159,20 @@ var onRun = function(context) {
 
 							// Increment the group counter
 							groupCount++;
+
+							// Reset the object counter
+							objectCount = 1;
+						}
+
+						// If the max per row is greater than 0, and object count is greater than max per row
+						if (maxPer > 0 && objectCount > maxPer) {
+							// Reset x position, set the y position of the next row, reset the row height
+							x = 0;
+							y += groupSpace + yPad;
+							groupSpace = 0;
+
+							// Reset the object counter
+							objectCount = 1;
 						}
 
 						// Position the symbol
@@ -158,6 +188,9 @@ var onRun = function(context) {
 						// Set the x position for the next symbol
 						x += symbolFrame.width() + xPad;
 					}
+
+					// Increment the object counter
+					objectCount++;
 				}
 
 				// Feedback to user
@@ -172,7 +205,6 @@ var onRun = function(context) {
 
 	function getLayoutSettings() {
 		// Setting variables
-		//var groupOptions = ['Level 1/','Level 1/Level 2/','Level 1/Level 2/Level 3/'];
 		var groupOptions = ['Label/','Label/Label/','Label/Label/Label/','Label/Label/Label/Label/'];
 		var groupDepth = 1;
 		var sortOrderOptions = ['A-Z','Z-A'];
@@ -182,6 +214,7 @@ var onRun = function(context) {
 		var xPad = '100';
 		var yPad = '100';
 		var removeSymbols = 0;
+		var maxPer = '';
 
 		// Get cached settings
 		try {
@@ -203,6 +236,10 @@ var onRun = function(context) {
 
 			if ([command valueForKey:"yPad" onLayer:page]) {
 				yPad = [command valueForKey:"yPad" onLayer:page];
+			}
+
+			if ([command valueForKey:"maxPer" onLayer:page]) {
+				maxPer = [command valueForKey:"maxPer" onLayer:page];
 			}
 
 			if ([command valueForKey:"removeSymbols" onLayer:page]) {
@@ -229,18 +266,22 @@ var onRun = function(context) {
 		alertWindow.addAccessoryView(createRadioButtons(sortDirectionOptions,sortDirection));
 		var fieldThree = alertWindow.viewAtIndex(5);
 
+		alertWindow.addTextLabelWithValue('Max per row/column:');
+		alertWindow.addAccessoryView(createField(maxPer,NSMakeRect(0,0,60,20)));
+		var fieldFour = alertWindow.viewAtIndex(7);
+
 		alertWindow.addTextLabelWithValue('Horizontal spacing:');
 		alertWindow.addAccessoryView(createField(xPad,NSMakeRect(0,0,60,20)));
-		var fieldFour = alertWindow.viewAtIndex(7);
+		var fieldFive = alertWindow.viewAtIndex(9);
 
 		alertWindow.addTextLabelWithValue('Vertical spacing:');
 		alertWindow.addAccessoryView(createField(yPad,NSMakeRect(0,0,60,20)));
-		var fieldFive = alertWindow.viewAtIndex(9);
+		var fieldSix = alertWindow.viewAtIndex(11);
 
 		alertWindow.addAccessoryView(createLabel('',12,NSMakeRect(0,0,0,0)));
 		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols",value:1},removeSymbols,NSMakeRect(0,0,300,20)));
 		alertWindow.addTextLabelWithValue('Do not remove symbols if you are using overrides!');
-		var fieldSix = alertWindow.viewAtIndex(11);
+		var fieldSeven = alertWindow.viewAtIndex(13);
 
 		alertWindow.addButtonWithTitle('OK');
 		alertWindow.addButtonWithTitle('Cancel');
@@ -252,6 +293,7 @@ var onRun = function(context) {
 		fieldThree.setNextKeyView(fieldFour);
 		fieldFour.setNextKeyView(fieldFive);
 		fieldFive.setNextKeyView(fieldSix);
+		fieldSix.setNextKeyView(fieldSeven);
 
 		var responseCode = alertWindow.runModal();
 
@@ -260,9 +302,10 @@ var onRun = function(context) {
 				[command setValue:[[alertWindow viewAtIndex:1] indexOfSelectedItem] forKey:"groupDepth" onLayer:page];
 				[command setValue:[[[alertWindow viewAtIndex:3] selectedCell] tag] forKey:"sortOrder" onLayer:page];
 				[command setValue:[[[alertWindow viewAtIndex:5] selectedCell] tag] forKey:"sortDirection" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:7] stringValue] forKey:"xPad" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:9] stringValue] forKey:"yPad" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:11] state] forKey:"removeSymbols" onLayer:page];
+				[command setValue:[[alertWindow viewAtIndex:7] stringValue] forKey:"maxPer" onLayer:page];
+				[command setValue:[[alertWindow viewAtIndex:9] stringValue] forKey:"xPad" onLayer:page];
+				[command setValue:[[alertWindow viewAtIndex:11] stringValue] forKey:"yPad" onLayer:page];
+				[command setValue:[[alertWindow viewAtIndex:13] state] forKey:"removeSymbols" onLayer:page];
 			}
 			catch(err) {
 				log("Unable to save settings.");
@@ -272,9 +315,10 @@ var onRun = function(context) {
 				groupDepth : [[alertWindow viewAtIndex:1] indexOfSelectedItem],
 				sortOrder : [[[alertWindow viewAtIndex:3] selectedCell] tag],
 				sortDirection : [[[alertWindow viewAtIndex:5] selectedCell] tag],
-				xPad : [[alertWindow viewAtIndex:7] stringValue],
-				yPad : [[alertWindow viewAtIndex:9] stringValue],
-				removeSymbols : [[alertWindow viewAtIndex:11] state]
+				maxPer : [[alertWindow viewAtIndex:7] stringValue],
+				xPad : [[alertWindow viewAtIndex:9] stringValue],
+				yPad : [[alertWindow viewAtIndex:11] stringValue],
+				removeSymbols : [[alertWindow viewAtIndex:13] state]
 			}
 		} else return false;
 	}
