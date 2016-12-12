@@ -100,6 +100,32 @@ var onRun = function(context) {
 				var groupSpace = 0;
 				var maxPer = (layoutSettings.maxPer > 0) ? layoutSettings.maxPer : 0;
 
+				// Title variables
+				var titleGroupName = 'Titles';
+				var screenTitleTextSize = 20;
+				var screenTitleTextHeight = 24;
+
+				// Find screen titles group, if it exists already
+				var titleGroup = findLayerByName(page,titleGroupName);
+
+				// Remove screen titles group, if it exists already
+				if (titleGroup) page.removeLayer(titleGroup);
+
+				// If user wants to display symbol group titles...
+				if (layoutSettings.displayTitles == 1) {
+					var screenTitleTextAlign = (layoutSettings.sortDirection == 0) ? 0 : 1;
+
+					// Add screen title style, if it doesn't exist already
+					var screenTitleStyle = addTextStyle('Symbol Group Title','Helvetica Neue Medium Italic',screenTitleTextSize,screenTitleTextHeight,screenTitleTextAlign);
+
+					// Add new screen title group
+					titleGroup = (layoutSettings.sortDirection == 0) ? addLayerGroup(page,titleGroupName,0,-(screenTitleTextHeight+yPad),true) : addLayerGroup(page,titleGroupName,-xPad,0,true);
+
+					// Set clickThrough and lock title group
+					titleGroup.setIsLocked(true);
+					titleGroup.setHasClickThrough(true);
+				}
+
 				// Reset the group counter
 				var groupCount = 1;
 				var objectCount = 1;
@@ -112,6 +138,14 @@ var onRun = function(context) {
 
 					// Layout symbols horizontally or vertically
 					if (layoutSettings.sortDirection == 0) {
+						// HORIZONTAL
+
+						// If user wants to display symbol group titles...
+						if (layoutSettings.displayTitles == 1 && objectCount == 1) {
+							// And if this is the first group...
+							addGroupTitle(titleGroup,groupLayout[i]['prefix'],x,0,0);
+						}
+
 						// If the current group number doesn't match the group counter
 						if (groupLayout[i]['group'] != groupCount) {
 							// Reset x position, set the y position of the next row, reset the row height
@@ -124,6 +158,11 @@ var onRun = function(context) {
 
 							// Reset the object counter
 							objectCount = 1;
+
+							// If user wants to display symbol group titles...
+							if (layoutSettings.displayTitles == 1) {
+								addGroupTitle(titleGroup,groupLayout[i]['prefix'],x,0,0);
+							}
 						}
 
 						// If the max per row is greater than 0, and object count is greater than max per row
@@ -150,6 +189,14 @@ var onRun = function(context) {
 						// Set the y position for the next symbol
 						y += symbolFrame.height() + yPad;
 					} else {
+						// VERTICAL
+
+						// If user wants to display symbol group titles...
+						if (layoutSettings.displayTitles == 1 && objectCount == 1) {
+							// And if this is the first group...
+							addGroupTitle(titleGroup,groupLayout[i]['prefix'],0,y,1);
+						}
+
 						// If the current group number doesn't match the group counter
 						if (groupLayout[i]['group'] != groupCount) {
 							// Reset x position, set the y position of the next row, reset the row height
@@ -162,6 +209,11 @@ var onRun = function(context) {
 
 							// Reset the object counter
 							objectCount = 1;
+
+							// If user wants to display symbol group titles...
+							if (layoutSettings.displayTitles == 1) {
+								addGroupTitle(titleGroup,groupLayout[i]['prefix'],0,y,1);
+							}
 						}
 
 						// If the max per row is greater than 0, and object count is greater than max per row
@@ -193,6 +245,9 @@ var onRun = function(context) {
 					objectCount++;
 				}
 
+				// Resize the screen titles group to ensure dimensions reflect contents
+				titleGroup.resizeToFitChildrenWithOption(0);
+
 				// Feedback to user
 				if (layoutSettings.removeSymbols == 1 && removedCount > 0) {
 					doc.showMessage("Symbol layout complete! " + removedCount + " unused symbols were removed.");
@@ -215,6 +270,7 @@ var onRun = function(context) {
 		var yPad = '100';
 		var removeSymbols = 0;
 		var maxPer = '';
+		var displayTitles = 0;
 
 		// Get cached settings
 		try {
@@ -240,6 +296,10 @@ var onRun = function(context) {
 
 			if ([command valueForKey:"maxPer" onLayer:page]) {
 				maxPer = [command valueForKey:"maxPer" onLayer:page];
+			}
+
+			if ([command valueForKey:"displayTitles" onLayer:page]) {
+				displayTitles = [command valueForKey:"displayTitles" onLayer:page];
 			}
 
 			if ([command valueForKey:"removeSymbols" onLayer:page]) {
@@ -279,9 +339,11 @@ var onRun = function(context) {
 		var fieldSix = alertWindow.viewAtIndex(11);
 
 		alertWindow.addAccessoryView(createLabel('',12,NSMakeRect(0,0,0,0)));
-		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols",value:1},removeSymbols,NSMakeRect(0,0,300,20)));
-		alertWindow.addTextLabelWithValue('Do not remove symbols if you are using overrides!');
+		alertWindow.addAccessoryView(createCheckbox({name:"Display symbol group titles",value:1},displayTitles,NSMakeRect(0,0,300,30)));
 		var fieldSeven = alertWindow.viewAtIndex(13);
+
+		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols\n*Do not use this if you have nested symbols or\nmake use of symbol overrides!",value:1},removeSymbols,NSMakeRect(0,0,300,60)));
+		var fieldEight = alertWindow.viewAtIndex(14);
 
 		alertWindow.addButtonWithTitle('OK');
 		alertWindow.addButtonWithTitle('Cancel');
@@ -294,6 +356,7 @@ var onRun = function(context) {
 		fieldFour.setNextKeyView(fieldFive);
 		fieldFive.setNextKeyView(fieldSix);
 		fieldSix.setNextKeyView(fieldSeven);
+		fieldSeven.setNextKeyView(fieldEight);
 
 		var responseCode = alertWindow.runModal();
 
@@ -305,7 +368,8 @@ var onRun = function(context) {
 				[command setValue:[[alertWindow viewAtIndex:7] stringValue] forKey:"maxPer" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:9] stringValue] forKey:"xPad" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:11] stringValue] forKey:"yPad" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:13] state] forKey:"removeSymbols" onLayer:page];
+				[command setValue:[[alertWindow viewAtIndex:13] state] forKey:"displayTitles" onLayer:page];
+				[command setValue:[[alertWindow viewAtIndex:14] state] forKey:"removeSymbols" onLayer:page];
 			}
 			catch(err) {
 				log("Unable to save settings.");
@@ -318,7 +382,8 @@ var onRun = function(context) {
 				maxPer : [[alertWindow viewAtIndex:7] stringValue],
 				xPad : [[alertWindow viewAtIndex:9] stringValue],
 				yPad : [[alertWindow viewAtIndex:11] stringValue],
-				removeSymbols : [[alertWindow viewAtIndex:13] state]
+				displayTitles : [[alertWindow viewAtIndex:13] state],
+				removeSymbols : [[alertWindow viewAtIndex:14] state]
 			}
 		} else return false;
 	}
@@ -425,5 +490,107 @@ var onRun = function(context) {
 		}
 
 		symbols = page.artboards();
+	}
+
+	function addGroupTitle(titleGroup,title,x,y,alignment) {
+		// Add screen title
+		var screenTitle = addTextLayer(titleGroup,title,title,0,false);
+
+		// Set screen title position
+		if (alignment == 0) {
+			screenTitle.frame().setY(y);
+			screenTitle.frame().setX(x);
+		} else {
+			screenTitle.frame().setY(y);
+			screenTitle.frame().setX(x-screenTitle.frame().width());
+		}
+
+		// Set screen title style
+		screenTitle.setStyle(screenTitleStyle.newInstance());
+	}
+
+	function addLayerGroup(output,layerName,x,y,isUnique) {
+		var layerGroup = findLayerByName(output,layerName);
+
+		if (isUnique && layerGroup) {
+			layerGroup.frame().setX(x);
+			layerGroup.frame().setY(y);
+		} else {
+			layerGroup = MSLayerGroup.new();
+			layerGroup.setName(layerName);
+			layerGroup.frame().setX(x);
+			layerGroup.frame().setY(y);
+
+			output.addLayers([layerGroup]);
+		}
+
+		return layerGroup;
+	}
+
+	function addTextStyle(styleName,fontName,fontSize,fontLineHeight,textAlignment) {
+		getTextStyleByName(styleName,1);
+
+		var sharedStyles = doc.documentData().layerTextStyles();
+
+		var textStyle = [[MSTextLayer alloc] initWithFrame:nil];
+		textStyle.setFontSize(fontSize);
+		textStyle.setLineHeight(fontLineHeight);
+		textStyle.setTextAlignment(textAlignment);
+		textStyle.setFontPostscriptName(fontName);
+
+		sharedStyles.addSharedStyleWithName_firstInstance(styleName,textStyle.style());
+
+		return getTextStyleByName(styleName);
+	}
+
+	function addTextLayer(output,layerName,layerValue,layerWidth,isLocked) {
+		var textLayer = MSTextLayer.new();
+		textLayer.setStringValue(layerValue);
+		textLayer.setName(layerName);
+		textLayer.setIsLocked(isLocked);
+
+		if (layerWidth > 0) {
+			textLayer.setTextBehaviour(1);
+			textLayer.frame().setWidth(layerWidth);
+		}
+
+		output.addLayers([textLayer]);
+
+		return textLayer;
+	}
+
+	function getTextStyleByName(styleName,removeStyle) {
+		var textStyles = doc.documentData().layerTextStyles().objects();
+
+		if (textStyles) {
+			for (var i = 0; i < textStyles.count(); i++) {
+				if (textStyles.objectAtIndex(i).name() == styleName) {
+					if (removeStyle && removeStyle == 1) {
+						doc.documentData().layerTextStyles().removeSharedStyle(textStyles.objectAtIndex(i));
+						return false;
+					} else {
+						return textStyles.objectAtIndex(i);
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	function findLayerByName(scope,layerName,type) {
+		var scope = scope.layers();
+
+		if (scope) {
+			for (var i = 0; i < scope.count(); i++) {
+				var name = scope.objectAtIndex(i).name().trim();
+
+				if ((!type && name == layerName) || (type && name == layerName && scope.objectAtIndex(i) instanceof type)) {
+					return scope.objectAtIndex(i);
+				}
+			}
+		}
+
+		return false;
 	}
 };
