@@ -37,8 +37,67 @@ var onRun = function(context) {
 
 				// If user wants to remove unused symbols...
 				if (layoutSettings.removeSymbols == 1) {
-					// Run function to remove symbols and set removed symbol count
-					var removedCount = removeUnusedSymbols();
+					// Document variables
+					var pages = doc.pages();
+					var pagesLoop = pages.objectEnumerator();
+					var thisPage;
+
+					// Symbol variables
+					var exemptSymbols = [];
+					var removedSymbolCount = 0;
+
+					// Iterate through each page and find children
+					while (thisPage = pagesLoop.nextObject()) {
+						// Children variables
+						var children = thisPage.children();
+						var loopChildren = children.objectEnumerator();
+						var child;
+
+						// Iterate through each child...
+						while (child = loopChildren.nextObject()) {
+							// If child is a symbol instance and has overrides...
+							if (child.class() == "MSSymbolInstance" && child.overrides()) {
+								// Create object of overrides
+								var overrides = child.overrides().objectForKey(0).allValues();
+
+								// Iterate through overrides
+								for (var i = 0; i < overrides.count(); i++) {
+									// Function to add each override symbol ID to exempt symbols object
+									pushOverrideSymbolIDtoArray(overrides.objectAtIndex(i),exemptSymbols);
+								}
+							}
+
+							// If child is a symbol master...
+							if (child.class() == "MSSymbolMaster") {
+								// Layer variables
+								var layers = child.children();
+								var loopLayers = layers.objectEnumerator();
+								var layer;
+								var exemptions = 0;
+
+								// Iterate through layers
+								while (layer = loopLayers.nextObject()) {
+									// If layer is a symbol instance...
+									if (layer.class() == "MSSymbolInstance") {
+										// Add symbol master ID to exempt symbols object
+										exemptSymbols.push(String(layer.symbolMaster().symbolID()));
+
+										// Increment exemption counter
+										exemptions++;
+									}
+								}
+
+								// If this symbol had nested symbols...
+								if (exemptions > 0) {
+									// Add this symbol ID to exempt symbols object
+									exemptSymbols.push(String(child.symbolID()));
+								}
+							}
+						}
+					}
+
+					// Call function to remove unused symbols
+					removeUnusedSymbols();
 				}
 
 				// Find titles group
@@ -187,8 +246,8 @@ var onRun = function(context) {
 					}
 
 					// Feedback to user
-					if (layoutSettings.removeSymbols == 1 && removedCount > 0) {
-						doc.showMessage("Symbol layout complete! " + removedCount + " unused symbols were removed.");
+					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
+						doc.showMessage("Symbol layout complete! " + removedSymbolCount + " unused symbols were removed.");
 					} else {
 						doc.showMessage("Symbol layout complete!");
 					}
@@ -288,7 +347,7 @@ var onRun = function(context) {
 		alertWindow.addAccessoryView(createCheckbox({name:"Display symbol group titles",value:1},displayTitles,NSMakeRect(0,0,300,30)));
 		var fieldSeven = alertWindow.viewAtIndex(13);
 
-		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols\n*Do not use this if you have nested symbols or\nmake use of symbol overrides!",value:1},removeSymbols,NSMakeRect(0,0,300,60)));
+		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols\n(This will NOT remove nested symbols,\nsymbols with nested symbols, or symbols\nused as overrides.)",value:1},removeSymbols,NSMakeRect(0,0,300,80)));
 		var fieldEight = alertWindow.viewAtIndex(14);
 
 		alertWindow.addButtonWithTitle('OK');
@@ -399,20 +458,40 @@ var onRun = function(context) {
 		return checkbox;
 	}
 
+	function pushOverrideSymbolIDtoArray(overrideObject,array) {
+		if (
+			overrideObject.class() == "__NSDictionaryI" ||
+			overrideObject.class() == "__NSDictionaryM" ||
+			overrideObject.class() == "__NSSingleEntryDictionaryI" ||
+			overrideObject.class() == "__NSSingleEntryDictionaryM"
+		) {
+			if (overrideObject.objectForKey("symbolID")) {
+				array.push(String(overrideObject.objectForKey("symbolID")));
+			}
+
+			for (var i = 0; i < overrideObject.allValues().count(); i ++) {
+				pushOverrideSymbolIDtoArray(overrideObject.allValues().objectAtIndex(i),array);
+			}
+		}
+	}
+
 	function removeUnusedSymbols() {
+		var count = 0;
 		var symbols = context.document.documentData().allSymbols();
-		var removedSymbolCount = 0;
+		var symbolsLoop = symbols.objectEnumerator();
+		var symbol;
 
-		for (var i = 0; i < symbols.count(); i++) {
-			var symbol = symbols.objectAtIndex(i);
-
-			if (!symbol.hasInstances()) {
+		while (symbol = symbolsLoop.nextObject()) {
+			if (!symbol.hasInstances() && exemptSymbols.indexOf(String(symbol.symbolID())) == -1) {
 				symbol.removeFromParent();
+				count++;
 				removedSymbolCount++;
 			}
 		}
 
-		return removedSymbolCount;
+		if (count != 0) {
+			removeUnusedSymbols();
+		}
 	}
 
 	function findLayerByName(scope,name,type) {
