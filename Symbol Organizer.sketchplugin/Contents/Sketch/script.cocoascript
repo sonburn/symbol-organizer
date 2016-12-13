@@ -4,22 +4,17 @@ var onRun = function(context) {
 	var command = context.command;
 	var page = doc.currentPage();
 	var symbols = page.artboards();
-	var symbolCount = symbols.count();
 
 	// If the symbols page is not selected...
 	if (page.name() != 'Symbols') {
 		// Feedback to user
 		displayDialog("Symbol Organizer","Please select your symbols page.");
-	}
-	// If the symbols page is selected...
-	else {
+	} else {
 		// If there are no symbols...
-		if (!symbolCount) {
+		if (symbols.count() == 0) {
 			// Feedback to user
-			displayDialog("Symbol Organizer","There are no symbols or organize.");
-		}
-		// If there are symbols...
-		else {
+			displayDialog("Symbol Organizer","There are no symbols to organize.");
+		} else {
 			// Reset page origin
 			var pageOrigin = CGPointMake(0,0);
 			page.setRulerBase(pageOrigin);
@@ -29,21 +24,13 @@ var onRun = function(context) {
 
 			// If layout settings were provided...
 			if (layoutSettings) {
-				// Remove unused symbols
+				// If user wants to remove unused symbols...
 				if (layoutSettings.removeSymbols == 1) {
-					var removedCount = 0;
+					// Run function to remove symbols and get removed symbol count
+					var removedCount = removeUnusedSymbols();
 
-					for (var i=0; i < symbols.count(); i++) {
-						var symbol = symbols.objectAtIndex(i);
-
-						if (!symbol.hasInstances()) {
-							symbol.removeFromParent();
-							removedCount++;
-						}
-					}
-
+					// Update symbols object
 					symbols = page.artboards();
-					symbolCount = symbols.count();
 				}
 
 				// Duplicate symbols object
@@ -65,16 +52,16 @@ var onRun = function(context) {
 				var lastGroupPrefix;
 
 				// Iterate through the symbols
-				for (var i = 0; i < symbolCount; i++) {
+				for (var i = 0; i < symbols.count(); i++) {
 					// Symbol variables
 					var symbol = layoutSymbols.objectAtIndex(i);
 					var symbolName = symbol.name();
 
 					// Determine a break point in the symbol name
-					var breakPoint = getCharPosition(symbolName,"/",layoutSettings.groupDepth+1);
+					var breakPoint = (symbolName.indexOf("/") != -1) ? getCharPosition(symbolName,"/",layoutSettings.groupDepth+1) : 0;
 
 					// Set a prefix for current group
-					var thisGroupPrefix = (breakPoint > 0) ? symbolName.slice(0,breakPoint) : symbolName.slice(0,symbolName.indexOf("/"));
+					var thisGroupPrefix = (breakPoint > 0) ? symbolName.slice(0,breakPoint) : symbolName;
 
 					// If this group prefix is not the same as last group
 					if (lastGroupPrefix != thisGroupPrefix) {
@@ -245,8 +232,10 @@ var onRun = function(context) {
 					objectCount++;
 				}
 
-				// Resize the screen titles group to ensure dimensions reflect contents
-				titleGroup.resizeToFitChildrenWithOption(0);
+				if (layoutSettings.displayTitles == 1) {
+					// Resize the screen titles group to ensure dimensions reflect contents
+					titleGroup.resizeToFitChildrenWithOption(0);
+				}
 
 				// Feedback to user
 				if (layoutSettings.removeSymbols == 1 && removedCount > 0) {
@@ -300,10 +289,6 @@ var onRun = function(context) {
 
 			if ([command valueForKey:"displayTitles" onLayer:page]) {
 				displayTitles = [command valueForKey:"displayTitles" onLayer:page];
-			}
-
-			if ([command valueForKey:"removeSymbols" onLayer:page]) {
-				removeSymbols = [command valueForKey:"removeSymbols" onLayer:page];
 			}
 		}
 		catch(err) {
@@ -369,7 +354,6 @@ var onRun = function(context) {
 				[command setValue:[[alertWindow viewAtIndex:9] stringValue] forKey:"xPad" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:11] stringValue] forKey:"yPad" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:13] state] forKey:"displayTitles" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:14] state] forKey:"removeSymbols" onLayer:page];
 			}
 			catch(err) {
 				log("Unable to save settings.");
@@ -592,5 +576,20 @@ var onRun = function(context) {
 		}
 
 		return false;
+	}
+
+	function removeUnusedSymbols() {
+		var removedCount = 0;
+
+		for (var i = 0; i < symbols.count(); i++) {
+			var symbol = symbols.objectAtIndex(i);
+
+			if (!symbol.hasInstances()) {
+				symbol.removeFromParent();
+				removedCount++;
+			}
+		}
+
+		return removedCount;
 	}
 };
