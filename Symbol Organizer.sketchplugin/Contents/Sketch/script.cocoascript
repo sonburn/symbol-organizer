@@ -1,250 +1,212 @@
 var onRun = function(context) {
+	var pluginName = "Symbol Organizer";
+
 	// Document variables
 	var doc = context.document;
 	var command = context.command;
 	var page = doc.currentPage();
-	var symbols = page.artboards();
 
 	// If the symbols page is not selected...
 	if (page.name() != 'Symbols') {
 		// Feedback to user
-		displayDialog("Symbol Organizer","Please select your symbols page.");
+		displayDialog("Please select your symbols page.",pluginName);
 	} else {
-		// If there are no symbols...
-		if (symbols.count() == 0) {
-			// Feedback to user
-			displayDialog("Symbol Organizer","There are no symbols to organize.");
-		} else {
-			// Reset page origin
-			var pageOrigin = CGPointMake(0,0);
-			page.setRulerBase(pageOrigin);
-
+		// If the document has symbols...
+		if (docHasSymbols()) {
 			// Get layout settings
 			var layoutSettings = getLayoutSettings();
 
 			// If layout settings were provided...
 			if (layoutSettings) {
-				// If user wants to remove unused symbols...
-				if (layoutSettings.removeSymbols == 1) {
-					// Run function to remove symbols and get removed symbol count
-					var removedCount = removeUnusedSymbols();
-
-					// Update symbols object
-					symbols = page.artboards();
-				}
-
-				// Duplicate symbols object
-				var layoutSymbols = page.artboards();
-
-				// Sort new symbols object by name
-				var sortByName = [NSSortDescriptor sortDescriptorWithKey:"name" ascending:1];
-				layoutSymbols = [layoutSymbols sortedArrayUsingDescriptors:[sortByName]];
-
-				// Duplicate the sorted symbol object, reverse the order if the user has selected to do so
-				var layoutLayers = (layoutSettings.sortOrder == 0) ? [[layoutSymbols reverseObjectEnumerator] allObjects] : layoutSymbols;
-
-				// Sort the layer list
-				sortLayerList(layoutLayers);
-
-				// Grouping variables
-				var groupCount = 0;
-				var groupLayout = [];
-				var lastGroupPrefix;
-
-				// Iterate through the symbols
-				for (var i = 0; i < symbols.count(); i++) {
-					// Symbol variables
-					var symbol = layoutSymbols.objectAtIndex(i);
-					var symbolName = symbol.name();
-
-					// Determine a break point in the symbol name
-					var breakPoint = (symbolName.indexOf("/") != -1) ? getCharPosition(symbolName,"/",layoutSettings.groupDepth+1) : 0;
-
-					// Set a prefix for current group
-					var thisGroupPrefix = (breakPoint > 0) ? symbolName.slice(0,breakPoint) : symbolName;
-
-					// If this group prefix is not the same as last group
-					if (lastGroupPrefix != thisGroupPrefix) {
-						// Increment the group counter
-						groupCount++;
-					}
-
-					// Add an entry to the group object
-					groupLayout.push({
-						prefix: thisGroupPrefix,
-						group: groupCount
-					});
-
-					// Set the last group prefix to current prefix
-					lastGroupPrefix = thisGroupPrefix;
-				}
-
 				// Layout variables
 				var x = 0;
 				var y = 0;
 				var xPad = parseInt(layoutSettings.xPad);
 				var yPad = parseInt(layoutSettings.yPad);
-				var groupSpace = 0;
 				var maxPer = (layoutSettings.maxPer > 0) ? layoutSettings.maxPer : 0;
 
 				// Title variables
 				var titleGroupName = 'Titles';
-				var screenTitleTextSize = 20;
-				var screenTitleTextHeight = 24;
+				var titleStyleName = 'Symbol Group Title';
+				var titleStyleFont = 'Helvetica Neue Medium Italic';
+				var titleTextSize = 20;
+				var titleTextHeight = 24;
+				var titleTextAlign = (layoutSettings.sortDirection == 0) ? 0 : 1;
+				var titleGroupX = (layoutSettings.sortDirection == 0) ? 0 : -xPad;
+				var titleGroupY = (layoutSettings.sortDirection == 0) ? -(titleTextHeight+yPad) : 0;
 
-				// Find screen titles group, if it exists already
+				// If user wants to remove unused symbols...
+				if (layoutSettings.removeSymbols == 1) {
+					// Run function to remove symbols and set removed symbol count
+					var removedCount = removeUnusedSymbols();
+				}
+
+				// Find titles group
 				var titleGroup = findLayerByName(page,titleGroupName);
 
-				// Remove screen titles group, if it exists already
+				// If titles group exists, remove it
 				if (titleGroup) page.removeLayer(titleGroup);
 
-				// If user wants to display symbol group titles...
-				if (layoutSettings.displayTitles == 1) {
-					var screenTitleTextAlign = (layoutSettings.sortDirection == 0) ? 0 : 1;
+				// If the document still has symbols...
+				if (docHasSymbols()) {
+					// Create a symbols object
+					var symbols = doc.documentData().allSymbols();
 
-					// Add screen title style, if it doesn't exist already
-					var screenTitleStyle = addTextStyle('Symbol Group Title','Helvetica Neue Medium Italic',screenTitleTextSize,screenTitleTextHeight,screenTitleTextAlign);
+					// Sort the symbols object by name
+					var sortByName = [NSSortDescriptor sortDescriptorWithKey:"name" ascending:1];
+					symbols = [symbols sortedArrayUsingDescriptors:[sortByName]];
 
-					// Add new screen title group
-					titleGroup = (layoutSettings.sortDirection == 0) ? addLayerGroup(page,titleGroupName,0,-(screenTitleTextHeight+yPad),true) : addLayerGroup(page,titleGroupName,-xPad,0,true);
+					// Sort the layer list
+					sortLayerList(symbols,layoutSettings.sortOrder);
 
-					// Set clickThrough and lock title group
-					titleGroup.setIsLocked(true);
-					titleGroup.setHasClickThrough(true);
-				}
+					// Create the group object
+					var groupLayout = createGroupObject(symbols,layoutSettings.groupDepth);
 
-				// Reset the group counter
-				var groupCount = 1;
-				var objectCount = 1;
+					// Reset page origin
+					page.setRulerBase(CGPointMake(0,0));
 
-				// Iterate through the group object
-				for (var i = 0; i < groupLayout.length; i++) {
-					// Symbol variables
-					var symbol = layoutSymbols.objectAtIndex(i);
-					var symbolFrame = symbol.frame();
+					// If user wants to display group titles...
+					if (layoutSettings.displayTitles == 1) {
+						// Add title style
+						addTextStyle(titleStyleName,titleStyleFont,titleTextSize,titleTextHeight,titleTextAlign);
 
-					// Layout symbols horizontally or vertically
-					if (layoutSettings.sortDirection == 0) {
-						// HORIZONTAL
+						// Add title group
+						titleGroup = addLayerGroup(page,titleGroupName,titleGroupX,titleGroupY,true);
 
-						// If user wants to display symbol group titles...
-						if (layoutSettings.displayTitles == 1 && objectCount == 1) {
-							// And if this is the first group...
-							addGroupTitle(titleGroup,groupLayout[i]['prefix'],x,0,0);
-						}
-
-						// If the current group number doesn't match the group counter
-						if (groupLayout[i]['group'] != groupCount) {
-							// Reset x position, set the y position of the next row, reset the row height
-							y = 0;
-							x += groupSpace + xPad;
-							groupSpace = 0;
-
-							// Increment the group counter
-							groupCount++;
-
-							// Reset the object counter
-							objectCount = 1;
-
-							// If user wants to display symbol group titles...
-							if (layoutSettings.displayTitles == 1) {
-								addGroupTitle(titleGroup,groupLayout[i]['prefix'],x,0,0);
-							}
-						}
-
-						// If the max per row is greater than 0, and object count is greater than max per row
-						if (maxPer > 0 && objectCount > maxPer) {
-							// Reset x position, set the y position of the next row, reset the row height
-							y = 0;
-							x += groupSpace + xPad;
-							groupSpace = 0;
-
-							// Reset the object counter
-							objectCount = 1;
-						}
-
-						// Position the symbol
-						symbolFrame.x = x;
-						symbolFrame.y = y;
-
-						// If this symbol is taller than previous symbols in row
-						if (symbolFrame.width() > groupSpace) {
-							// Increase the height of the row
-							groupSpace = symbolFrame.width();
-						}
-
-						// Set the y position for the next symbol
-						y += symbolFrame.height() + yPad;
-					} else {
-						// VERTICAL
-
-						// If user wants to display symbol group titles...
-						if (layoutSettings.displayTitles == 1 && objectCount == 1) {
-							// And if this is the first group...
-							addGroupTitle(titleGroup,groupLayout[i]['prefix'],0,y,1);
-						}
-
-						// If the current group number doesn't match the group counter
-						if (groupLayout[i]['group'] != groupCount) {
-							// Reset x position, set the y position of the next row, reset the row height
-							x = 0;
-							y += groupSpace + yPad;
-							groupSpace = 0;
-
-							// Increment the group counter
-							groupCount++;
-
-							// Reset the object counter
-							objectCount = 1;
-
-							// If user wants to display symbol group titles...
-							if (layoutSettings.displayTitles == 1) {
-								addGroupTitle(titleGroup,groupLayout[i]['prefix'],0,y,1);
-							}
-						}
-
-						// If the max per row is greater than 0, and object count is greater than max per row
-						if (maxPer > 0 && objectCount > maxPer) {
-							// Reset x position, set the y position of the next row, reset the row height
-							x = 0;
-							y += groupSpace + yPad;
-							groupSpace = 0;
-
-							// Reset the object counter
-							objectCount = 1;
-						}
-
-						// Position the symbol
-						symbolFrame.x = x;
-						symbolFrame.y = y;
-
-						// If this symbol is taller than previous symbols in row
-						if (symbolFrame.height() > groupSpace) {
-							// Increase the height of the row
-							groupSpace = symbolFrame.height();
-						}
-
-						// Set the x position for the next symbol
-						x += symbolFrame.width() + xPad;
+						// Set clickThrough and lock title group
+						titleGroup.setIsLocked(true);
+						titleGroup.setHasClickThrough(true);
 					}
 
-					// Increment the object counter
-					objectCount++;
-				}
+					// Set tracker/counters
+					var groupSpace = 0;
+					var groupCount = 1;
+					var objectCount = 1;
 
-				if (layoutSettings.displayTitles == 1) {
-					// Resize the screen titles group to ensure dimensions reflect contents
-					titleGroup.resizeToFitChildrenWithOption(0);
-				}
+					// Iterate through the group object
+					for (var i = 0; i < groupLayout.length; i++) {
+						// Symbol variables
+						var symbol = symbols.objectAtIndex(i);
+						var symbolFrame = symbol.frame();
 
-				// Feedback to user
-				if (layoutSettings.removeSymbols == 1 && removedCount > 0) {
-					doc.showMessage("Symbol layout complete! " + removedCount + " unused symbols were removed.");
-				} else {
-					doc.showMessage("Symbol layout complete!");
+						// If user wants to display titles, and this is the first item in the first group, or a brand new group...
+						if (layoutSettings.displayTitles == 1 && (objectCount == 1 || groupCount != groupLayout[i]['group'])) {
+							// Title position variables
+							var titleTextX = 0;
+							var titleTextY = 0;
+							var titleTextAlign = 0;
+
+							// Update title position variables per the layout direction
+							if (layoutSettings.sortDirection == 0) {
+								titleTextX = (objectCount == 1) ? 0 : groupSpace+xPad;
+							} else {
+								titleTextY = (objectCount == 1) ? 0 : groupSpace+yPad;
+								titleTextAlign = 1;
+							}
+
+							// Add the title into the title group
+							addGroupTitle(titleGroup,groupLayout[i]['prefix'],titleTextX,titleTextY,titleTextAlign);
+						}
+
+						// If the current group number doesn't match the group counter
+						if (groupLayout[i]['group'] != groupCount) {
+							// Update group position variables per the layout direction
+							if (layoutSettings.sortDirection == 0) {
+								// Reset y position, set the x position of the next row
+								y = 0;
+								x += groupSpace + xPad;
+							} else {
+								// Reset x position, set the y position of the next row
+								x = 0;
+								y += groupSpace + yPad;
+							}
+
+							// Reset the group space tracker
+							groupSpace = 0;
+
+							// Increment the group counter
+							groupCount++;
+
+							// Reset the object counter
+							objectCount = 1;
+						}
+
+						// If the max per row is greater than 0, and object count is greater than max per row
+						if (maxPer > 0 && objectCount > maxPer) {
+							// Update group position variables per the layout direction
+							if (layoutSettings.sortDirection == 0) {
+								// Reset y position, set the x position of the next row
+								y = 0;
+								x += groupSpace + xPad;
+							} else {
+								// Reset x position, set the y position of the next row
+								x = 0;
+								y += groupSpace + yPad;
+							}
+
+							// Reset the group space tracker
+							groupSpace = 0;
+
+							// Reset the object counter
+							objectCount = 1;
+						}
+
+						// Position the symbol
+						symbolFrame.x = x;
+						symbolFrame.y = y;
+
+						// Update group position variables per the layout direction
+						if (layoutSettings.sortDirection == 0) {
+							// If this symbol is wider than previous symbols in row
+							if (symbolFrame.width() > groupSpace) {
+								// Increase the width of the row
+								groupSpace = symbolFrame.width();
+							}
+
+							// Set the y position for the next symbol
+							y += symbolFrame.height() + yPad;
+						} else {
+							// If this symbol is taller than previous symbols in row
+							if (symbolFrame.height() > groupSpace) {
+								// Increase the height of the row
+								groupSpace = symbolFrame.height();
+							}
+
+							// Set the x position for the next symbol
+							x += symbolFrame.width() + xPad;
+						}
+
+						// Increment the object counter
+						objectCount++;
+					}
+
+					// If user wants to display group titles...
+					if (layoutSettings.displayTitles == 1) {
+						// Resize the titles group to ensure dimensions reflect contents
+						titleGroup.resizeToFitChildrenWithOption(0);
+					}
+
+					// Feedback to user
+					if (layoutSettings.removeSymbols == 1 && removedCount > 0) {
+						doc.showMessage("Symbol layout complete! " + removedCount + " unused symbols were removed.");
+					} else {
+						doc.showMessage("Symbol layout complete!");
+					}
 				}
 			}
 		}
+	}
+
+	function displayDialog(body,title) {
+		var app = NSApplication.sharedApplication();
+		app.displayDialog_withTitle(body,title);
+	}
+
+	function docHasSymbols() {
+		if (context.document.documentData().allSymbols().count() == 0) {
+			displayDialog("There are no symbols to organize.",pluginName);
+			return false;
+		} return true;
 	}
 
 	function getLayoutSettings() {
@@ -255,11 +217,11 @@ var onRun = function(context) {
 		var sortOrder = 1;
 		var sortDirectionOptions = ['Horizontal','Vertical'];
 		var sortDirection = 0;
+		var maxPer = '';
 		var xPad = '100';
 		var yPad = '100';
-		var removeSymbols = 0;
-		var maxPer = '';
 		var displayTitles = 0;
+		var removeSymbols = 0;
 
 		// Get cached settings
 		try {
@@ -290,14 +252,13 @@ var onRun = function(context) {
 			if ([command valueForKey:"displayTitles" onLayer:page]) {
 				displayTitles = [command valueForKey:"displayTitles" onLayer:page];
 			}
-		}
-		catch(err) {
+		} catch(err) {
 			log("Unable to fetch settings.");
 		}
 
 		var alertWindow = COSAlertWindow.new();
 		alertWindow.setIcon(NSImage.alloc().initByReferencingFile(context.plugin.urlForResourceNamed("icon.png").path()));
-		alertWindow.setMessageText('Symbol Organizer');
+		alertWindow.setMessageText(pluginName);
 
 		alertWindow.addTextLabelWithValue('Granularity:');
 		alertWindow.addAccessoryView(createSelect(groupOptions,groupDepth,NSMakeRect(0,0,180,25)));
@@ -354,8 +315,8 @@ var onRun = function(context) {
 				[command setValue:[[alertWindow viewAtIndex:9] stringValue] forKey:"xPad" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:11] stringValue] forKey:"yPad" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:13] state] forKey:"displayTitles" onLayer:page];
-			}
-			catch(err) {
+				[command setValue:0 forKey:"removeSymbols" onLayer:page];
+			} catch(err) {
 				log("Unable to save settings.");
 			}
 
@@ -372,35 +333,13 @@ var onRun = function(context) {
 		} else return false;
 	}
 
-	function createCheckbox(item,flag,frame) {
-		flag = ( flag == false ) ? NSOffState : NSOnState;
-		var checkbox = [[NSButton alloc] initWithFrame:frame];
-		[checkbox setButtonType: NSSwitchButton];
-		[checkbox setBezelStyle: 0];
-		[checkbox setTitle: item.name];
-		[checkbox setTag: item.value];
-		[checkbox setState: flag];
+	function createSelect(items,selectedItemIndex,frame) {
+		selectedItemIndex = (selectedItemIndex > -1) ? selectedItemIndex : 0;
+		var comboBox = [[NSComboBox alloc] initWithFrame:frame];
+		[comboBox addItemsWithObjectValues:items];
+		[comboBox selectItemAtIndex:selectedItemIndex];
 
-		return checkbox;
-	}
-
-	function createField(value,frame) {
-		var field = [[NSTextField alloc] initWithFrame:frame];
-		[field setStringValue:value];
-
-		return field;
-	}
-
-	function createLabel(text,size,frame) {
-		var label = [[NSTextField alloc] initWithFrame:frame];
-		[label setStringValue:text];
-		[label setFont:[NSFont boldSystemFontOfSize:size]];
-		[label setBezeled:false];
-		[label setDrawsBackground:false];
-		[label setEditable:false];
-		[label setSelectable:false];
-
-		return label;
+		return comboBox;
 	}
 
 	function createRadioButtons(options,selected) {
@@ -429,92 +368,145 @@ var onRun = function(context) {
 		return buttonMatrix;
 	}
 
-	function createSelect(items,selectedItemIndex,frame) {
-		selectedItemIndex = (selectedItemIndex > -1) ? selectedItemIndex : 0;
-		var comboBox = [[NSComboBox alloc] initWithFrame:frame];
-		[comboBox addItemsWithObjectValues:items];
-		[comboBox selectItemAtIndex:selectedItemIndex];
+	function createField(value,frame) {
+		var field = [[NSTextField alloc] initWithFrame:frame];
+		[field setStringValue:value];
 
-		return comboBox;
+		return field;
 	}
 
-	function displayDialog(title,body) {
-		var app = NSApplication.sharedApplication();
-		app.displayDialog_withTitle(body,title);
+	function createLabel(text,size,frame) {
+		var label = [[NSTextField alloc] initWithFrame:frame];
+		[label setStringValue:text];
+		[label setFont:[NSFont boldSystemFontOfSize:size]];
+		[label setBezeled:false];
+		[label setDrawsBackground:false];
+		[label setEditable:false];
+		[label setSelectable:false];
+
+		return label;
+	}
+
+	function createCheckbox(item,flag,frame) {
+		flag = ( flag == false ) ? NSOffState : NSOnState;
+		var checkbox = [[NSButton alloc] initWithFrame:frame];
+		[checkbox setButtonType: NSSwitchButton];
+		[checkbox setBezelStyle: 0];
+		[checkbox setTitle: item.name];
+		[checkbox setTag: item.value];
+		[checkbox setState: flag];
+
+		return checkbox;
+	}
+
+	function removeUnusedSymbols() {
+		var symbols = context.document.documentData().allSymbols();
+		var removedSymbolCount = 0;
+
+		for (var i = 0; i < symbols.count(); i++) {
+			var symbol = symbols.objectAtIndex(i);
+
+			if (!symbol.hasInstances()) {
+				symbol.removeFromParent();
+				removedSymbolCount++;
+			}
+		}
+
+		return removedSymbolCount;
+	}
+
+	function findLayerByName(scope,name,type) {
+		var scope = scope.layers();
+
+		if (scope) {
+			for (var i = 0; i < scope.count(); i++) {
+				var layerName = scope.objectAtIndex(i).name().trim();
+
+				if ((!type && layerName == name) || (type && layerName == name && scope.objectAtIndex(i) instanceof type)) {
+					return scope.objectAtIndex(i);
+				}
+			}
+		}
+
+		return false;
+	}
+
+	function sortLayerList(symbols,order) {
+		var layerList = (order == 0) ? [[symbols reverseObjectEnumerator] allObjects] : symbols;
+
+		var symbols = context.document.documentData().allSymbols();
+		var symbolPage = doc.currentPage();
+		var symbolIndices = [];
+		var symbolLoop = symbols.objectEnumerator();
+		var symbol;
+
+		while (symbol = symbolLoop.nextObject()) {
+			symbolIndices.push(symbolPage.indexOfLayer(symbol));
+		}
+
+		var removeLoop = symbols.objectEnumerator();
+		var symbolToRemove;
+
+		while (symbolToRemove = removeLoop.nextObject()) {
+			symbolToRemove.removeFromParent();
+		}
+
+		for (var i = 0; i < symbolIndices.length; i++) {
+			[symbolPage insertLayers:[NSArray arrayWithObject:layerList[i]] atIndex:symbolIndices[i]];
+		}
+	}
+
+	function createGroupObject(symbols,depth) {
+		// Group variables
+		var groupCount = 0;
+		var groupLayout = [];
+		var lastGroupPrefix;
+
+		// Iterate through the symbols
+		for (var i = 0; i < symbols.count(); i++) {
+			// Symbol variables
+			var symbol = symbols.objectAtIndex(i);
+			var symbolName = symbol.name();
+
+			// Determine a break point in the symbol name
+			var breakPoint = (symbolName.indexOf("/") != -1) ? getCharPosition(symbolName,"/",depth+1) : 0;
+
+			// Set a prefix for current group
+			var thisGroupPrefix = (breakPoint > 0) ? symbolName.slice(0,breakPoint) : symbolName;
+
+			// If this group prefix is not the same as last group
+			if (lastGroupPrefix != thisGroupPrefix) {
+				// Increment the group counter
+				groupCount++;
+			}
+
+			// Add an entry to the group object
+			groupLayout.push({
+				prefix: thisGroupPrefix,
+				group: groupCount
+			});
+
+			// Set the last group prefix to current prefix
+			lastGroupPrefix = thisGroupPrefix;
+		}
+
+		return groupLayout;
 	}
 
 	function getCharPosition(string,match,count) {
-		var position = string.split(match,count).join(match).length;
+		var actualCount = string.split(match).length - 1;
 
-		if (string.length() != position) {
-			return position;
-		} else return -1;
-	}
-
-	function sortLayerList(layoutSymbols) {
-		var parent = page;
-		var indices = [];
-		var loop = [symbols objectEnumerator], symbol;
-
-		while (symbol = [loop nextObject]) {
-			indices.push(parent.indexOfLayer(symbol));
-		}
-
-		var removeLoop = [symbols objectEnumerator], symbolToRemove;
-
-		while (symbolToRemove = [removeLoop nextObject]) {
-			[symbolToRemove removeFromParent];
-		}
-
-		for (var i = 0; i < indices.length; i++) {
-			var index = indices[i];
-			var sortedSymbol = layoutSymbols[i];
-			var layerArray = [NSArray arrayWithObject:sortedSymbol];
-			[parent insertLayers:layerArray atIndex:index];
-		}
-
-		symbols = page.artboards();
-	}
-
-	function addGroupTitle(titleGroup,title,x,y,alignment) {
-		// Add screen title
-		var screenTitle = addTextLayer(titleGroup,title,title,0,false);
-
-		// Set screen title position
-		if (alignment == 0) {
-			screenTitle.frame().setY(y);
-			screenTitle.frame().setX(x);
+		if (actualCount < count) {
+			return string.split(match,actualCount).join(match).length;
 		} else {
-			screenTitle.frame().setY(y);
-			screenTitle.frame().setX(x-screenTitle.frame().width());
+			return string.split(match,count).join(match).length;
 		}
-
-		// Set screen title style
-		screenTitle.setStyle(screenTitleStyle.newInstance());
-	}
-
-	function addLayerGroup(output,layerName,x,y,isUnique) {
-		var layerGroup = findLayerByName(output,layerName);
-
-		if (isUnique && layerGroup) {
-			layerGroup.frame().setX(x);
-			layerGroup.frame().setY(y);
-		} else {
-			layerGroup = MSLayerGroup.new();
-			layerGroup.setName(layerName);
-			layerGroup.frame().setX(x);
-			layerGroup.frame().setY(y);
-
-			output.addLayers([layerGroup]);
-		}
-
-		return layerGroup;
 	}
 
 	function addTextStyle(styleName,fontName,fontSize,fontLineHeight,textAlignment) {
 		getTextStyleByName(styleName,1);
 
-		var sharedStyles = doc.documentData().layerTextStyles();
+		var textStyles = doc.documentData().layerTextStyles();
 
 		var textStyle = [[MSTextLayer alloc] initWithFrame:nil];
 		textStyle.setFontSize(fontSize);
@@ -522,25 +514,7 @@ var onRun = function(context) {
 		textStyle.setTextAlignment(textAlignment);
 		textStyle.setFontPostscriptName(fontName);
 
-		sharedStyles.addSharedStyleWithName_firstInstance(styleName,textStyle.style());
-
-		return getTextStyleByName(styleName);
-	}
-
-	function addTextLayer(output,layerName,layerValue,layerWidth,isLocked) {
-		var textLayer = MSTextLayer.new();
-		textLayer.setStringValue(layerValue);
-		textLayer.setName(layerName);
-		textLayer.setIsLocked(isLocked);
-
-		if (layerWidth > 0) {
-			textLayer.setTextBehaviour(1);
-			textLayer.frame().setWidth(layerWidth);
-		}
-
-		output.addLayers([textLayer]);
-
-		return textLayer;
+		textStyles.addSharedStyleWithName_firstInstance(styleName,textStyle.style());
 	}
 
 	function getTextStyleByName(styleName,removeStyle) {
@@ -562,34 +536,56 @@ var onRun = function(context) {
 		return false;
 	}
 
-	function findLayerByName(scope,layerName,type) {
-		var scope = scope.layers();
+	function addLayerGroup(output,layerName,x,y,isUnique) {
+		var layerGroup = findLayerByName(output,layerName);
 
-		if (scope) {
-			for (var i = 0; i < scope.count(); i++) {
-				var name = scope.objectAtIndex(i).name().trim();
+		if (isUnique && layerGroup) {
+			layerGroup.frame().setX(x);
+			layerGroup.frame().setY(y);
+		} else {
+			layerGroup = MSLayerGroup.new();
+			layerGroup.setName(layerName);
+			layerGroup.frame().setX(x);
+			layerGroup.frame().setY(y);
 
-				if ((!type && name == layerName) || (type && name == layerName && scope.objectAtIndex(i) instanceof type)) {
-					return scope.objectAtIndex(i);
-				}
-			}
+			output.addLayers([layerGroup]);
 		}
 
-		return false;
+		return layerGroup;
 	}
 
-	function removeUnusedSymbols() {
-		var removedCount = 0;
+	function addGroupTitle(titleGroup,title,x,y,alignment) {
+		// Add screen title
+		var screenTitle = addTextLayer(titleGroup,title,title,0,false);
 
-		for (var i = 0; i < symbols.count(); i++) {
-			var symbol = symbols.objectAtIndex(i);
-
-			if (!symbol.hasInstances()) {
-				symbol.removeFromParent();
-				removedCount++;
-			}
+		// Set screen title position
+		if (alignment == 0) {
+			screenTitle.frame().setY(y);
+			screenTitle.frame().setX(x);
+		} else {
+			screenTitle.frame().setY(y);
+			screenTitle.frame().setX(x-screenTitle.frame().width());
 		}
 
-		return removedCount;
+		var screenTitleStyle = getTextStyleByName(titleStyleName);
+
+		// Set screen title style
+		screenTitle.setStyle(screenTitleStyle.newInstance());
+	}
+
+	function addTextLayer(output,layerName,layerValue,layerWidth,isLocked) {
+		var textLayer = MSTextLayer.new();
+		textLayer.setStringValue(layerValue);
+		textLayer.setName(layerName);
+		textLayer.setIsLocked(isLocked);
+
+		if (layerWidth > 0) {
+			textLayer.setTextBehaviour(1);
+			textLayer.frame().setWidth(layerWidth);
+		}
+
+		output.addLayers([textLayer]);
+
+		return textLayer;
 	}
 };
