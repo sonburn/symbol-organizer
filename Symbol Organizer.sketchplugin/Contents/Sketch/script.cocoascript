@@ -98,9 +98,9 @@ var onRun = function(context) {
 
 							// Update title position variables per the layout direction
 							if (layoutSettings.sortDirection == 0) {
-								titleTextX = (objectCount == 1) ? 0 : groupSpace+xPad;
+								titleTextX = (objectCount == 1) ? 0 : x+groupSpace+xPad;
 							} else {
-								titleTextY = (objectCount == 1) ? 0 : groupSpace+yPad;
+								titleTextY = (objectCount == 1) ? 0 : y+groupSpace+yPad;
 								titleTextAlign = 1;
 							}
 
