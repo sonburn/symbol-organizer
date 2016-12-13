@@ -319,11 +319,11 @@ var onRun = function(context) {
 		alertWindow.setIcon(NSImage.alloc().initByReferencingFile(context.plugin.urlForResourceNamed("icon.png").path()));
 		alertWindow.setMessageText(pluginName);
 
-		alertWindow.addTextLabelWithValue('Granularity:');
+		alertWindow.addTextLabelWithValue('Group granularity:');
 		alertWindow.addAccessoryView(createSelect(groupOptions,groupDepth,NSMakeRect(0,0,180,25)));
 		var fieldOne = alertWindow.viewAtIndex(1);
 
-		alertWindow.addTextLabelWithValue('Sort order:');
+		alertWindow.addTextLabelWithValue('Layer list sort order:');
 		alertWindow.addAccessoryView(createRadioButtons(sortOrderOptions,sortOrder));
 		var fieldTwo = alertWindow.viewAtIndex(3);
 
@@ -344,7 +344,7 @@ var onRun = function(context) {
 		var fieldSix = alertWindow.viewAtIndex(11);
 
 		alertWindow.addAccessoryView(createLabel('',12,NSMakeRect(0,0,0,0)));
-		alertWindow.addAccessoryView(createCheckbox({name:"Display symbol group titles",value:1},displayTitles,NSMakeRect(0,0,300,30)));
+		alertWindow.addAccessoryView(createCheckbox({name:"Display group titles",value:1},displayTitles,NSMakeRect(0,0,300,30)));
 		var fieldSeven = alertWindow.viewAtIndex(13);
 
 		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols\n(This will NOT remove nested symbols,\nsymbols with nested symbols, or symbols\nused as overrides.)",value:1},removeSymbols,NSMakeRect(0,0,300,80)));
