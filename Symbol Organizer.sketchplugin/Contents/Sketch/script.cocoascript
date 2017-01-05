@@ -4,13 +4,50 @@ var onRun = function(context) {
 	// Document variables
 	var doc = context.document;
 	var command = context.command;
+	var pages = doc.pages();
 	var page = doc.currentPage();
 
-	// If the symbols page is not selected...
+	// Select the symbols page if it's not selected...
 	if (page.name() != 'Symbols') {
-		// Feedback to user
-		displayDialog("Please select your symbols page.",pluginName);
-	} else {
+		// Symbol page variables
+		var symbolPageIndex;
+		var symbolPageCount = 0;
+
+		// Get index of Symbols page
+		for (var i = 0; i < pages.count(); i++) {
+			if (pages.objectAtIndex(i).name() == "Symbols") {
+				symbolPageIndex = pages.objectAtIndex(i);
+				symbolPageCount++;
+			}
+		}
+
+		// Handling for various Symbol page counts
+		switch (symbolPageCount) {
+			case 1:
+				// Set Symbols page as current page
+				doc.setCurrentPage(symbolPageIndex);
+				page = doc.currentPage();
+
+				// If the symbols page has content...
+				if (page.layers().count() != 0) {
+					// Select and deselect the first symbol to avoid page selection corruption
+					page.layers().objectAtIndex(0).select_byExpandingSelection(true,false)
+					page.layers().objectAtIndex(0).select_byExpandingSelection(false,false);
+				}
+
+				break;
+			case 0:
+				// Feedback to user
+				displayDialog("This document does not have a symbols page.",pluginName);
+				break;
+			default:
+				// Feedback to user
+				displayDialog("This document has too many symbols pages (" + symbolPageCount + ").",pluginName);
+		}
+	}
+
+	// If there current page is the one and only Symbols page...
+	if (page.name() == 'Symbols') {
 		// If the document has symbols...
 		if (docHasSymbols()) {
 			// Get layout settings
@@ -38,7 +75,6 @@ var onRun = function(context) {
 				// If user wants to remove unused symbols...
 				if (layoutSettings.removeSymbols == 1) {
 					// Document variables
-					var pages = doc.pages();
 					var pagesLoop = pages.objectEnumerator();
 					var thisPage;
 
@@ -69,28 +105,34 @@ var onRun = function(context) {
 
 							// If child is a symbol master...
 							if (child.class() == "MSSymbolMaster") {
-								// Layer variables
-								var layers = child.children();
-								var loopLayers = layers.objectEnumerator();
-								var layer;
-								var exemptions = 0;
-
-								// Iterate through layers
-								while (layer = loopLayers.nextObject()) {
-									// If layer is a symbol instance...
-									if (layer.class() == "MSSymbolInstance") {
-										// Add symbol master ID to exempt symbols object
-										exemptSymbols.push(String(layer.symbolMaster().symbolID()));
-
-										// Increment exemption counter
-										exemptions++;
-									}
-								}
-
-								// If this symbol had nested symbols...
-								if (exemptions > 0) {
+								// If this symbol does not reside on the symbols page...
+								if (thisPage.name() != 'Symbols') {
 									// Add this symbol ID to exempt symbols object
 									exemptSymbols.push(String(child.symbolID()));
+								} else {
+									// Layer variables
+									var layers = child.children();
+									var loopLayers = layers.objectEnumerator();
+									var layer;
+									var exemptions = 0;
+
+									// Iterate through layers
+									while (layer = loopLayers.nextObject()) {
+										// If layer is a symbol instance...
+										if (layer.class() == "MSSymbolInstance") {
+											// Add symbol master ID to exempt symbols object
+											exemptSymbols.push(String(layer.symbolMaster().symbolID()));
+
+											// Increment exemption counter
+											exemptions++;
+										}
+									}
+
+									// If this symbol had nested symbols...
+									if (exemptions > 0) {
+										// Add this symbol ID to exempt symbols object
+										exemptSymbols.push(String(child.symbolID()));
+									}
 								}
 							}
 						}
@@ -108,15 +150,15 @@ var onRun = function(context) {
 
 				// If the document still has symbols...
 				if (docHasSymbols()) {
-					// Create a symbols object
-					var symbols = doc.documentData().allSymbols();
+					// Create a symbols object, of either all symbols or just Symbols page symbols
+					var symbols = (layoutSettings.gatherSymbols == 1) ? doc.documentData().allSymbols() : page.symbols();
 
 					// Sort the symbols object by name
 					var sortByName = [NSSortDescriptor sortDescriptorWithKey:"name" ascending:1];
 					symbols = [symbols sortedArrayUsingDescriptors:[sortByName]];
 
 					// Sort the layer list
-					sortLayerList(symbols,layoutSettings.sortOrder);
+					sortLayerList(symbols,layoutSettings.sortOrder,layoutSettings.gatherSymbols);
 
 					// Create the group object
 					var groupLayout = createGroupObject(symbols,layoutSettings.groupDepth);
@@ -280,6 +322,7 @@ var onRun = function(context) {
 		var xPad = '100';
 		var yPad = '100';
 		var displayTitles = 0;
+		var gatherSymbols = 0;
 		var removeSymbols = 0;
 
 		// Get cached settings
@@ -310,6 +353,10 @@ var onRun = function(context) {
 
 			if ([command valueForKey:"displayTitles" onLayer:page]) {
 				displayTitles = [command valueForKey:"displayTitles" onLayer:page];
+			}
+
+			if ([command valueForKey:"gatherSymbols" onLayer:page]) {
+				gatherSymbols = [command valueForKey:"gatherSymbols" onLayer:page];
 			}
 		} catch(err) {
 			log("Unable to fetch settings.");
@@ -344,11 +391,14 @@ var onRun = function(context) {
 		var fieldSix = alertWindow.viewAtIndex(11);
 
 		alertWindow.addAccessoryView(createLabel('',12,NSMakeRect(0,0,0,0)));
-		alertWindow.addAccessoryView(createCheckbox({name:"Display group titles",value:1},displayTitles,NSMakeRect(0,0,300,30)));
+		alertWindow.addAccessoryView(createCheckbox({name:"Display group titles",value:1},displayTitles,NSMakeRect(0,0,300,18)));
 		var fieldSeven = alertWindow.viewAtIndex(13);
 
-		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols\n(This will NOT remove nested symbols,\nsymbols with nested symbols, or symbols\nused as overrides.)",value:1},removeSymbols,NSMakeRect(0,0,300,80)));
+		alertWindow.addAccessoryView(createCheckbox({name:"Gather symbols from other pages",value:1},gatherSymbols,NSMakeRect(0,0,300,30)));
 		var fieldEight = alertWindow.viewAtIndex(14);
+
+		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols\n(This option will NOT remove nested symbols, symbols with nested symbols, symbols used as overrides, or symbols that reside on pages other than the Symbols page.)",value:1},removeSymbols,NSMakeRect(0,0,300,80)));
+		var fieldNine = alertWindow.viewAtIndex(15);
 
 		alertWindow.addButtonWithTitle('OK');
 		alertWindow.addButtonWithTitle('Cancel');
@@ -362,6 +412,7 @@ var onRun = function(context) {
 		fieldFive.setNextKeyView(fieldSix);
 		fieldSix.setNextKeyView(fieldSeven);
 		fieldSeven.setNextKeyView(fieldEight);
+		fieldEight.setNextKeyView(fieldNine);
 
 		var responseCode = alertWindow.runModal();
 
@@ -374,6 +425,7 @@ var onRun = function(context) {
 				[command setValue:[[alertWindow viewAtIndex:9] stringValue] forKey:"xPad" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:11] stringValue] forKey:"yPad" onLayer:page];
 				[command setValue:[[alertWindow viewAtIndex:13] state] forKey:"displayTitles" onLayer:page];
+				[command setValue:[[alertWindow viewAtIndex:14] state] forKey:"gatherSymbols" onLayer:page];
 				[command setValue:0 forKey:"removeSymbols" onLayer:page];
 			} catch(err) {
 				log("Unable to save settings.");
@@ -387,7 +439,8 @@ var onRun = function(context) {
 				xPad : [[alertWindow viewAtIndex:9] stringValue],
 				yPad : [[alertWindow viewAtIndex:11] stringValue],
 				displayTitles : [[alertWindow viewAtIndex:13] state],
-				removeSymbols : [[alertWindow viewAtIndex:14] state]
+				gatherSymbols : [[alertWindow viewAtIndex:14] state],
+				removeSymbols : [[alertWindow viewAtIndex:15] state]
 			}
 		} else return false;
 	}
@@ -510,17 +563,14 @@ var onRun = function(context) {
 		return false;
 	}
 
-	function sortLayerList(symbols,order) {
-		var layerList = (order == 0) ? [[symbols reverseObjectEnumerator] allObjects] : symbols;
-
-		var symbols = context.document.documentData().allSymbols();
-		var symbolPage = doc.currentPage();
+	function sortLayerList(symbols,order,gather) {
+		var symbols = (order == 0) ? [[symbols reverseObjectEnumerator] allObjects] : symbols;
 		var symbolIndices = [];
 		var symbolLoop = symbols.objectEnumerator();
 		var symbol;
 
 		while (symbol = symbolLoop.nextObject()) {
-			symbolIndices.push(symbolPage.indexOfLayer(symbol));
+			symbolIndices.push(symbols.indexOfObject(symbol));
 		}
 
 		var removeLoop = symbols.objectEnumerator();
@@ -531,7 +581,7 @@ var onRun = function(context) {
 		}
 
 		for (var i = 0; i < symbolIndices.length; i++) {
-			[symbolPage insertLayers:[NSArray arrayWithObject:layerList[i]] atIndex:symbolIndices[i]];
+			[[doc currentPage] insertLayers:[NSArray arrayWithObject:symbols[i]] atIndex:symbolIndices[i]];
 		}
 	}
 
