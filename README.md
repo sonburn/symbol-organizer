@@ -4,4 +4,4 @@ Organize your symbols page alphabetically (including layer list) and into groupi
 
 ![Symbol Organizer](https://raw.githubusercontent.com/sonburn/symbol-organizer/master/Screenshots/Symbol%20Organizer.png)
 
-<a href="http://bit.ly/SketchRunnerWebsite"><img src="http://sketchrunner.com/img/badge_blue.png"></a>
+<a href="http://bit.ly/SketchRunnerWebsite"><img height="40" width="160" src="http://sketchrunner.com/img/badge_blue.png"></a>
