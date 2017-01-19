@@ -157,8 +157,13 @@ var onRun = function(context) {
 					var sortByName = [NSSortDescriptor sortDescriptorWithKey:"name" ascending:1];
 					symbols = [symbols sortedArrayUsingDescriptors:[sortByName]];
 
+					// if user wants to rename duplicate symbols...
+					if (layoutSettings.renameSymbols == 1) {
+						symbols = renameDuplicateSymbols(symbols);
+					}
+
 					// Sort the layer list
-					sortLayerList(symbols,layoutSettings.sortOrder,layoutSettings.gatherSymbols);
+					sortLayerList(symbols,layoutSettings.reverseOrder);
 
 					// Create the group object
 					var groupLayout = createGroupObject(symbols,layoutSettings.groupDepth);
@@ -314,14 +319,14 @@ var onRun = function(context) {
 		// Setting variables
 		var groupOptions = ['Label/','Label/Label/','Label/Label/Label/','Label/Label/Label/Label/'];
 		var groupDepth = 1;
-		var sortOrderOptions = ['A-Z','Z-A'];
-		var sortOrder = 1;
+		var displayTitles = 0;
 		var sortDirectionOptions = ['Horizontal','Vertical'];
 		var sortDirection = 0;
-		var maxPer = '';
 		var xPad = '100';
 		var yPad = '100';
-		var displayTitles = 0;
+		var maxPer = '';
+		var reverseOrder = 0;
+		var renameSymbols = 0;
 		var gatherSymbols = 0;
 		var removeSymbols = 0;
 
@@ -331,8 +336,8 @@ var onRun = function(context) {
 				groupDepth = [command valueForKey:"groupDepth" onLayer:page];
 			}
 
-			if ([command valueForKey:"sortOrder" onLayer:page]) {
-				sortOrder = [command valueForKey:"sortOrder" onLayer:page];
+			if ([command valueForKey:"displayTitles" onLayer:page]) {
+				displayTitles = [command valueForKey:"displayTitles" onLayer:page];
 			}
 
 			if ([command valueForKey:"sortDirection" onLayer:page]) {
@@ -351,8 +356,12 @@ var onRun = function(context) {
 				maxPer = [command valueForKey:"maxPer" onLayer:page];
 			}
 
-			if ([command valueForKey:"displayTitles" onLayer:page]) {
-				displayTitles = [command valueForKey:"displayTitles" onLayer:page];
+			if ([command valueForKey:"reverseOrder" onLayer:page]) {
+				reverseOrder = [command valueForKey:"reverseOrder" onLayer:page];
+			}
+
+			if ([command valueForKey:"renameSymbols" onLayer:page]) {
+				renameSymbols = [command valueForKey:"renameSymbols" onLayer:page];
 			}
 
 			if ([command valueForKey:"gatherSymbols" onLayer:page]) {
@@ -362,85 +371,118 @@ var onRun = function(context) {
 			log("Unable to fetch settings.");
 		}
 
+		// Establish the alert window
 		var alertWindow = COSAlertWindow.new();
 		alertWindow.setIcon(NSImage.alloc().initByReferencingFile(context.plugin.urlForResourceNamed("icon.png").path()));
 		alertWindow.setMessageText(pluginName);
 
-		alertWindow.addTextLabelWithValue('Group granularity:');
-		alertWindow.addAccessoryView(createSelect(groupOptions,groupDepth,NSMakeRect(0,0,180,25)));
-		var fieldOne = alertWindow.viewAtIndex(1);
+		// Grouping options
+		var groupFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,75));
+		alertWindow.addAccessoryView(groupFrame);
 
-		alertWindow.addTextLabelWithValue('Layer list sort order:');
-		alertWindow.addAccessoryView(createRadioButtons(sortOrderOptions,sortOrder));
-		var fieldTwo = alertWindow.viewAtIndex(3);
+		var groupGranularityLabel = createLabel('Group granularity',12,NSMakeRect(0,59,140,16));
+		groupFrame.addSubview(groupGranularityLabel);
 
-		alertWindow.addTextLabelWithValue('Sort direction:');
-		alertWindow.addAccessoryView(createRadioButtons(sortDirectionOptions,sortDirection));
-		var fieldThree = alertWindow.viewAtIndex(5);
+		var groupGranularityValue = createSelect(groupOptions,groupDepth,NSMakeRect(0,26,180,28));
+		groupFrame.addSubview(groupGranularityValue);
 
-		alertWindow.addTextLabelWithValue('Max per row/column:');
-		alertWindow.addAccessoryView(createField(maxPer,NSMakeRect(0,0,60,20)));
-		var fieldFour = alertWindow.viewAtIndex(7);
+		var groupTitlesCheckbox = createCheckbox({name:"Display group titles",value:1},displayTitles,NSMakeRect(0,0,300,18));
+		groupFrame.addSubview(groupTitlesCheckbox);
 
-		alertWindow.addTextLabelWithValue('Horizontal spacing:');
-		alertWindow.addAccessoryView(createField(xPad,NSMakeRect(0,0,60,20)));
-		var fieldFive = alertWindow.viewAtIndex(9);
+		// Layout options
+		var layoutFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,239));
+		alertWindow.addAccessoryView(layoutFrame);
 
-		alertWindow.addTextLabelWithValue('Vertical spacing:');
-		alertWindow.addAccessoryView(createField(yPad,NSMakeRect(0,0,60,20)));
-		var fieldSix = alertWindow.viewAtIndex(11);
+		var layoutDirectionLabel = createLabel('Layout direction',12,NSMakeRect(0,208,140,16));
+		layoutFrame.addSubview(layoutDirectionLabel);
 
-		alertWindow.addAccessoryView(createLabel('',12,NSMakeRect(0,0,0,0)));
-		alertWindow.addAccessoryView(createCheckbox({name:"Display group titles",value:1},displayTitles,NSMakeRect(0,0,300,18)));
-		var fieldSeven = alertWindow.viewAtIndex(13);
+		var layoutDirectionValue = createRadioButtons(sortDirectionOptions,sortDirection,0,0,153);
+		layoutFrame.addSubview(layoutDirectionValue);
 
-		alertWindow.addAccessoryView(createCheckbox({name:"Gather symbols from other pages",value:1},gatherSymbols,NSMakeRect(0,0,300,30)));
-		var fieldEight = alertWindow.viewAtIndex(14);
+		var layoutHorizontalLabel = createLabel('Horizontal space',12,NSMakeRect(0,137,140,16));
+		layoutFrame.addSubview(layoutHorizontalLabel);
 
-		alertWindow.addAccessoryView(createCheckbox({name:"Remove unused symbols\n(This option will NOT remove nested symbols, symbols with nested symbols, symbols used as overrides, or symbols that reside on pages other than the Symbols page.)",value:1},removeSymbols,NSMakeRect(0,0,300,80)));
-		var fieldNine = alertWindow.viewAtIndex(15);
+		var layoutHorizontalValue = createField(xPad,NSMakeRect(0,110,60,22));
+		layoutFrame.addSubview(layoutHorizontalValue);
 
+		var layoutVerticalLabel = createLabel('Vertical space',12,NSMakeRect(0,82,140,16));
+		layoutFrame.addSubview(layoutVerticalLabel);
+
+		var layoutVerticalValue = createField(yPad,NSMakeRect(0,55,60,22));
+		layoutFrame.addSubview(layoutVerticalValue);
+
+		var layoutMaxLabel = createLabel('Max per row/column',12,NSMakeRect(0,27,140,16));
+		layoutFrame.addSubview(layoutMaxLabel);
+
+		var layoutMaxValue = createField(maxPer,NSMakeRect(0,0,60,22));
+		layoutFrame.addSubview(layoutMaxValue);
+
+		// Other options
+		var otherFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,161));
+		alertWindow.addAccessoryView(otherFrame);
+
+		var reverseOrderCheckbox = createCheckbox({name:"Reverse layer list sort order",value:1},reverseOrder,NSMakeRect(0,126,300,18));
+		otherFrame.addSubview(reverseOrderCheckbox);
+
+		var renameSymbolsCheckbox = createCheckbox({name:"Sequentially number duplicate symbols",value:1},renameSymbols,NSMakeRect(0,98,300,18));
+		otherFrame.addSubview(renameSymbolsCheckbox);
+
+		var gatherSymbolsCheckbox = createCheckbox({name:"Gather symbols from other pages",value:1},gatherSymbols,NSMakeRect(0,70,300,18));
+		otherFrame.addSubview(gatherSymbolsCheckbox);
+
+		var removeSymbolsCheckbox = createCheckbox({name:"Remove unused symbols",value:1},removeSymbols,NSMakeRect(0,42,300,18));
+		otherFrame.addSubview(removeSymbolsCheckbox);
+
+		var removeSymbolsDescription = createDescription('This option will NOT remove nested symbols, symbols with nested symbols, symbols used as overrides, or symbols that reside on other pages.',11,NSMakeRect(18,0,282,42));
+		otherFrame.addSubview(removeSymbolsDescription);
+
+		// Buttons
 		alertWindow.addButtonWithTitle('OK');
 		alertWindow.addButtonWithTitle('Cancel');
 
-		// Set first responder and key order
-		alertWindow.alert().window().setInitialFirstResponder(fieldOne);
-		fieldOne.setNextKeyView(fieldTwo);
-		fieldTwo.setNextKeyView(fieldThree);
-		fieldThree.setNextKeyView(fieldFour);
-		fieldFour.setNextKeyView(fieldFive);
-		fieldFive.setNextKeyView(fieldSix);
-		fieldSix.setNextKeyView(fieldSeven);
-		fieldSeven.setNextKeyView(fieldEight);
-		fieldEight.setNextKeyView(fieldNine);
+		// Set key order and first responder
+		setKeyOrder(alertWindow,[
+			groupGranularityValue,
+			groupTitlesCheckbox,
+			layoutDirectionValue,
+			layoutHorizontalValue,
+			layoutVerticalValue,
+			layoutMaxValue,
+			reverseOrderCheckbox,
+			renameSymbolsCheckbox,
+			gatherSymbolsCheckbox,
+			removeSymbolsCheckbox
+		]);
 
 		var responseCode = alertWindow.runModal();
 
 		if (responseCode == 1000) {
 			try {
-				[command setValue:[[alertWindow viewAtIndex:1] indexOfSelectedItem] forKey:"groupDepth" onLayer:page];
-				[command setValue:[[[alertWindow viewAtIndex:3] selectedCell] tag] forKey:"sortOrder" onLayer:page];
-				[command setValue:[[[alertWindow viewAtIndex:5] selectedCell] tag] forKey:"sortDirection" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:7] stringValue] forKey:"maxPer" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:9] stringValue] forKey:"xPad" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:11] stringValue] forKey:"yPad" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:13] state] forKey:"displayTitles" onLayer:page];
-				[command setValue:[[alertWindow viewAtIndex:14] state] forKey:"gatherSymbols" onLayer:page];
+				[command setValue:[groupGranularityValue indexOfSelectedItem] forKey:"groupDepth" onLayer:page];
+				[command setValue:[groupTitlesCheckbox state] forKey:"displayTitles" onLayer:page];
+				[command setValue:[[layoutDirectionValue selectedCell] tag] forKey:"sortDirection" onLayer:page];
+				[command setValue:[layoutHorizontalValue stringValue] forKey:"xPad" onLayer:page];
+				[command setValue:[layoutVerticalValue stringValue] forKey:"yPad" onLayer:page];
+				[command setValue:[layoutMaxValue stringValue] forKey:"maxPer" onLayer:page];
+				[command setValue:[reverseOrderCheckbox state] forKey:"reverseOrder" onLayer:page];
+				[command setValue:[renameSymbolsCheckbox state] forKey:"renameSymbols" onLayer:page];
+				[command setValue:[gatherSymbolsCheckbox state] forKey:"gatherSymbols" onLayer:page];
 				[command setValue:0 forKey:"removeSymbols" onLayer:page];
 			} catch(err) {
 				log("Unable to save settings.");
 			}
 
 			return {
-				groupDepth : [[alertWindow viewAtIndex:1] indexOfSelectedItem],
-				sortOrder : [[[alertWindow viewAtIndex:3] selectedCell] tag],
-				sortDirection : [[[alertWindow viewAtIndex:5] selectedCell] tag],
-				maxPer : [[alertWindow viewAtIndex:7] stringValue],
-				xPad : [[alertWindow viewAtIndex:9] stringValue],
-				yPad : [[alertWindow viewAtIndex:11] stringValue],
-				displayTitles : [[alertWindow viewAtIndex:13] state],
-				gatherSymbols : [[alertWindow viewAtIndex:14] state],
-				removeSymbols : [[alertWindow viewAtIndex:15] state]
+				groupDepth : [groupGranularityValue indexOfSelectedItem],
+				displayTitles : [groupTitlesCheckbox state],
+				sortDirection : [[layoutDirectionValue selectedCell] tag],
+				xPad : [layoutHorizontalValue stringValue],
+				yPad : [layoutVerticalValue stringValue],
+				maxPer : [layoutMaxValue stringValue],
+				reverseOrder : [reverseOrderCheckbox state],
+				renameSymbols : [renameSymbolsCheckbox state],
+				gatherSymbols : [gatherSymbolsCheckbox state],
+				removeSymbols : [removeSymbolsCheckbox state]
 			}
 		} else return false;
 	}
@@ -454,18 +496,30 @@ var onRun = function(context) {
 		return comboBox;
 	}
 
-	function createRadioButtons(options,selected) {
+	function createRadioButtons(options,selected,format,x,y) {
 		// Set number of rows and columns
-		var rows = options.length;
-		var columns = 1;
+		if (!format || format == 0) {
+			var rows = options.length;
+			var columns = 1;
+			var buttonMatrixWidth = 300;
+			var buttonCellWidth = buttonMatrixWidth;
+		} else {
+			var rows = options.length / 2;
+			var columns = 2;
+			var buttonMatrixWidth = 300;
+			var buttonCellWidth = buttonMatrixWidth / columns;
+		}
+
+		var x = (x) ? x : 0;
+		var y = (y) ? y : 0;
 
 		// Make a prototype cell
 		var buttonCell = [[NSButtonCell alloc] init];
 		[buttonCell setButtonType:NSRadioButton]
 
 		// Make a matrix to contain the radio cells
-		var buttonMatrix = [[NSMatrix alloc] initWithFrame: NSMakeRect(20,20,300,rows*25) mode:NSRadioModeMatrix prototype:buttonCell numberOfRows:rows numberOfColumns:columns];
-		[buttonMatrix setCellSize: NSMakeSize(300,20)];
+		var buttonMatrix = [[NSMatrix alloc] initWithFrame: NSMakeRect(x,y,buttonMatrixWidth,rows*25) mode:NSRadioModeMatrix prototype:buttonCell numberOfRows:rows numberOfColumns:columns];
+		[buttonMatrix setCellSize: NSMakeSize(buttonCellWidth,20)];
 
 		// Create a cell for each option
 		for (i = 0; i < options.length; i++) {
@@ -491,6 +545,19 @@ var onRun = function(context) {
 		var label = [[NSTextField alloc] initWithFrame:frame];
 		[label setStringValue:text];
 		[label setFont:[NSFont boldSystemFontOfSize:size]];
+		[label setBezeled:false];
+		[label setDrawsBackground:false];
+		[label setEditable:false];
+		[label setSelectable:false];
+
+		return label;
+	}
+
+	function createDescription(text,size,frame) {
+		var label = [[NSTextField alloc] initWithFrame:frame];
+		[label setStringValue:text];
+		[label setFont:[NSFont systemFontOfSize:size]];
+		[label setTextColor:[NSColor colorWithCalibratedRed:(0/255) green:(0/255) blue:(0/255) alpha:0.6]];
 		[label setBezeled:false];
 		[label setDrawsBackground:false];
 		[label setEditable:false];
@@ -563,8 +630,31 @@ var onRun = function(context) {
 		return false;
 	}
 
-	function sortLayerList(symbols,order,gather) {
-		var symbols = (order == 0) ? [[symbols reverseObjectEnumerator] allObjects] : symbols;
+	function renameDuplicateSymbols(symbols) {
+		var symbolLoop = symbols.objectEnumerator();
+		var symbol;
+		var lastSymbolName;
+		var duplicateSymbolCount = 0;
+
+		while (symbol = symbolLoop.nextObject()) {
+			var thisSymbolName = symbol.name();
+
+			if (thisSymbolName == lastSymbolName) {
+				duplicateSymbolCount++;
+
+				symbol.setName(thisSymbolName + " " + duplicateSymbolCount);
+			} else {
+				duplicateSymbolCount = 0;
+			}
+
+			lastSymbolName = thisSymbolName;
+		}
+
+		return symbols;
+	}
+
+	function sortLayerList(symbols,order) {
+		var symbols = (order == 1) ? [[symbols reverseObjectEnumerator] allObjects] : symbols;
 		var symbolIndices = [];
 		var symbolLoop = symbols.objectEnumerator();
 		var symbol;
@@ -716,5 +806,16 @@ var onRun = function(context) {
 		output.addLayers([textLayer]);
 
 		return textLayer;
+	}
+
+	function setKeyOrder(alert,order) {
+		for (var i = 0; i < order.length; i++) {
+			var thisItem = order[i];
+			var nextItem = order[i+1];
+
+			if (nextItem) thisItem.setNextKeyView(nextItem);
+		}
+
+		alert.alert().window().setInitialFirstResponder(order[0]);
 	}
 };
