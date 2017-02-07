@@ -550,7 +550,7 @@ var onRun = function(context) {
 				array.push(String(overrideObject.objectForKey("symbolID")));
 			}
 
-			for (var i = 0; i < overrideObject.allValues().count(); i ++) {
+			for (var i = 0; i < overrideObject.allValues().count(); i++) {
 				pushOverrideSymbolIDtoArray(overrideObject.allValues().objectAtIndex(i),array);
 			}
 		}
@@ -598,7 +598,7 @@ var onRun = function(context) {
 		var duplicateSymbolCount = 0;
 
 		while (symbol = symbolLoop.nextObject()) {
-			var thisSymbolName = symbol.name();
+			var thisSymbolName = String(symbol.name());
 
 			if (thisSymbolName == lastSymbolName) {
 				duplicateSymbolCount++;
