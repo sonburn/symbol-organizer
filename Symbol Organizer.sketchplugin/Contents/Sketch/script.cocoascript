@@ -603,7 +603,7 @@ var onRun = function(context) {
 			if (thisSymbolName == lastSymbolName) {
 				duplicateSymbolCount++;
 
-				symbol.setName(thisSymbolName + " " + duplicateSymbolCount);
+				symbol.setName(thisSymbolName + " Copy " + duplicateSymbolCount);
 			} else {
 				duplicateSymbolCount = 0;
 			}
