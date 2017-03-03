@@ -292,6 +292,13 @@ var onRun = function(context) {
 						titleGroup.resizeToFitChildrenWithOption(0);
 					}
 
+					// Collapse symbols
+					var action = doc.actionsController().actionWithID("MSCollapseAllGroupsAction");
+
+					if (action.validate()) {
+						action.doPerformAction(nil);
+					}
+
 					// Feedback to user
 					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
 						doc.showMessage("Symbol layout complete! " + removedSymbolCount + " unused symbols were removed.");
