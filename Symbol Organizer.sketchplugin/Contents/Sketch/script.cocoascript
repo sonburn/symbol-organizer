@@ -119,7 +119,7 @@ var onRun = function(context) {
 									// Iterate through layers
 									while (layer = loopLayers.nextObject()) {
 										// If layer is a symbol instance...
-										if (layer.class() == "MSSymbolInstance") {
+										if (layer.class() == "MSSymbolInstance" && layer.symbolMaster()) {
 											// Add symbol master ID to exempt symbols object
 											exemptSymbols.push(String(layer.symbolMaster().symbolID()));
 
