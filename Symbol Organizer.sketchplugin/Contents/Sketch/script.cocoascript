@@ -293,11 +293,7 @@ var onRun = function(context) {
 					}
 
 					// Collapse symbols
-					var action = doc.actionsController().actionWithID("MSCollapseAllGroupsAction");
-
-					if (action.validate()) {
-						action.doPerformAction(nil);
-					}
+					actionWithType("MSCollapseAllGroupsAction").doPerformAction(nil);
 
 					// Feedback to user
 					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
@@ -799,5 +795,17 @@ var onRun = function(context) {
 		}
 
 		alert.alert().window().setInitialFirstResponder(order[0]);
+	}
+
+	function actionWithType(type) {
+		var controller = doc.actionsController();
+
+		if (controller.actionWithName) {
+			return controller.actionWithName(type);
+		} else if (controller.actionWithID) {
+			return controller.actionWithID(type);
+		} else {
+			return controller.actionForID(type);
+		}
 	}
 };
