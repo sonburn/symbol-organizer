@@ -7,49 +7,10 @@ var onRun = function(context) {
 	var pages = doc.pages();
 	var page = doc.currentPage();
 
-	// Select the symbols page if it's not selected...
-	if (page.name() != 'Symbols') {
-		// Symbol page variables
-		var symbolPageIndex;
-		var symbolPageCount = 0;
-
-		// Get index of Symbols page
-		for (var i = 0; i < pages.count(); i++) {
-			if (pages.objectAtIndex(i).name() == "Symbols") {
-				symbolPageIndex = pages.objectAtIndex(i);
-				symbolPageCount++;
-			}
-		}
-
-		// Handling for various Symbol page counts
-		switch (symbolPageCount) {
-			case 1:
-				// Set Symbols page as current page
-				doc.setCurrentPage(symbolPageIndex);
-				page = doc.currentPage();
-
-				// If the symbols page has content...
-				if (page.layers().count() != 0) {
-					// Select and deselect the first symbol to avoid page selection corruption
-					page.layers().objectAtIndex(0).select_byExpandingSelection(true,false)
-					page.layers().objectAtIndex(0).select_byExpandingSelection(false,false);
-				}
-
-				break;
-			case 0:
-				// Feedback to user
-				displayDialog("This document does not have a symbols page.",pluginName);
-				break;
-			default:
-				// Feedback to user
-				displayDialog("This document has too many symbols pages (" + symbolPageCount + ").",pluginName);
-		}
-	}
-
-	// If there current page is the one and only Symbols page...
-	if (page.name() == 'Symbols') {
-		// If the document has symbols...
-		if (docHasSymbols()) {
+	// If the current page has symbols...
+	if (pageHasSymbols()) {
+		// If the current page only contains symbols...
+		if (page.artboards().count() == page.symbols().count()) {
 			// Get layout settings
 			var layoutSettings = getLayoutSettings();
 
@@ -149,7 +110,7 @@ var onRun = function(context) {
 				if (titleGroup) page.removeLayer(titleGroup);
 
 				// If the document still has symbols...
-				if (docHasSymbols()) {
+				if (pageHasSymbols()) {
 					// Create a symbols object, of either all symbols or just Symbols page symbols
 					var symbols = (layoutSettings.gatherSymbols == 1) ? doc.documentData().allSymbols() : page.symbols();
 
@@ -303,6 +264,8 @@ var onRun = function(context) {
 					}
 				}
 			}
+		} else {
+			displayDialog("This page contains artboards and symbols. Symbol Organizer can only be used on pages with just symbols.",pluginName);
 		}
 	}
 
@@ -311,9 +274,9 @@ var onRun = function(context) {
 		app.displayDialog_withTitle(body,title);
 	}
 
-	function docHasSymbols() {
-		if (context.document.documentData().allSymbols().count() == 0) {
-			displayDialog("There are no symbols to organize.",pluginName);
+	function pageHasSymbols() {
+		if (context.document.currentPage().symbols().count() == 0) {
+			displayDialog("There are no symbols to organize on this page.",pluginName);
 			return false;
 		} return true;
 	}
@@ -341,13 +304,16 @@ var onRun = function(context) {
 		alertWindow.setMessageText(pluginName);
 
 		// Grouping options
-		var groupFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,75));
+		var groupFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,124));
 		alertWindow.addAccessoryView(groupFrame);
 
-		var groupGranularityLabel = createLabel('Group granularity',12,NSMakeRect(0,59,140,16));
+		var groupGranularityLabel = createLabel('Group Definition',12,NSMakeRect(0,108,140,16));
 		groupFrame.addSubview(groupGranularityLabel);
 
-		var groupGranularityValue = createSelect(['Label/','Label/Label/','Label/Label/Label/','Label/Label/Label/Label/'],defaultSettings.groupDepth,NSMakeRect(0,26,180,28));
+		var groupGranularityDescription = createDescription('Symbol Organizer uses a "/" in the name of each symbol to define the groups. This setting determines which "/" should be used.',11,NSMakeRect(0,62,300,42));
+		groupFrame.addSubview(groupGranularityDescription);
+
+		var groupGranularityValue = createSelect(['1st','2nd','3rd','4th','5th','6th','7th','8th'],defaultSettings.groupDepth,NSMakeRect(0,26,60,28));
 		groupFrame.addSubview(groupGranularityValue);
 
 		var groupTitlesCheckbox = createCheckbox({name:"Display group titles",value:1},defaultSettings.displayTitles,NSMakeRect(0,0,300,18));
@@ -357,25 +323,25 @@ var onRun = function(context) {
 		var layoutFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,239));
 		alertWindow.addAccessoryView(layoutFrame);
 
-		var layoutDirectionLabel = createLabel('Layout direction',12,NSMakeRect(0,208,140,16));
+		var layoutDirectionLabel = createLabel('Layout Direction',12,NSMakeRect(0,208,140,16));
 		layoutFrame.addSubview(layoutDirectionLabel);
 
 		var layoutDirectionValue = createRadioButtons(['Horizontal','Vertical'],defaultSettings.sortDirection,0,0,153);
 		layoutFrame.addSubview(layoutDirectionValue);
 
-		var layoutHorizontalLabel = createLabel('Horizontal space',12,NSMakeRect(0,137,140,16));
+		var layoutHorizontalLabel = createLabel('Horizontal Space',12,NSMakeRect(0,137,140,16));
 		layoutFrame.addSubview(layoutHorizontalLabel);
 
 		var layoutHorizontalValue = createField(defaultSettings.xPad,NSMakeRect(0,110,60,22));
 		layoutFrame.addSubview(layoutHorizontalValue);
 
-		var layoutVerticalLabel = createLabel('Vertical space',12,NSMakeRect(0,82,140,16));
+		var layoutVerticalLabel = createLabel('Vertical Space',12,NSMakeRect(0,82,140,16));
 		layoutFrame.addSubview(layoutVerticalLabel);
 
 		var layoutVerticalValue = createField(defaultSettings.yPad,NSMakeRect(0,55,60,22));
 		layoutFrame.addSubview(layoutVerticalValue);
 
-		var layoutMaxLabel = createLabel('Max per row/column',12,NSMakeRect(0,27,140,16));
+		var layoutMaxLabel = createLabel('Max Per Row/Column',12,NSMakeRect(0,27,140,16));
 		layoutFrame.addSubview(layoutMaxLabel);
 
 		var layoutMaxValue = createField(defaultSettings.maxPer,NSMakeRect(0,0,60,22));
