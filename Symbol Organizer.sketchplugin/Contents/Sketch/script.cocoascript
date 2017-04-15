@@ -230,41 +230,55 @@ var onRun = function(context) {
 							objectCount = 1;
 						}
 
-						// Position the symbol
-						if (layoutSettings.sortDirection == 0) {
-							// If the symbol can't be stacked
-							if (stackOffset + symbolFrame.width() > groupLayout[i]['groupMax']){
-								// Increase the y position
-								y += stackSpace + yPad;
-
-								// Reset stack					
-								stackOffset = 0;
-								stackSpace = 0;
-							}
-
-							// Position the symbol
-							symbolFrame.y = y;
-							symbolFrame.x = x + stackOffset;
-
-							// Increase stackOffset for next symbol
-							stackOffset += symbolFrame.width() + xStackPad;
-						} else {
-							// If the symbol can't be stacked
-							if (stackOffset + symbolFrame.height() > groupLayout[i]['groupMax']){
-								// Increase the x position
-								x += stackSpace + xPad;
-
-								// Reset stack					
-								stackOffset = 0;
-								stackSpace = 0;
-							}
-
+						// If not using compact layout...
+						if(layoutSettings.compactLayout == 0){
 							// Position the symbol
 							symbolFrame.x = x;
-							symbolFrame.y = y + stackOffset;
+							symbolFrame.y = y;
 
-							// Increase stackOffset for next symbol
-							stackOffset += symbolFrame.height() + yStackPad;
+							if (layoutSettings.sortDirection == 0) {
+								// Set the y position for the next symbol
+								y += symbolFrame.height() + yPad;
+							} else {
+								// Set the x position for the next symbol
+								x += symbolFrame.width() + xPad;
+							}
+						} else {
+							if (layoutSettings.sortDirection == 0) {
+								// If the symbol can't be stacked
+								if (stackOffset + symbolFrame.width() > groupLayout[i]['groupMax']){
+									// Increase the y position
+									y += stackSpace + yPad;
+
+									// Reset stack					
+									stackOffset = 0;
+									stackSpace = 0;
+								}
+
+								// Position the symbol
+								symbolFrame.y = y;
+								symbolFrame.x = x + stackOffset;
+
+								// Increase stackOffset for next symbol
+								stackOffset += symbolFrame.width() + xStackPad;
+							} else {
+								// If the symbol can't be stacked
+								if (stackOffset + symbolFrame.height() > groupLayout[i]['groupMax']){
+									// Increase the x position
+									x += stackSpace + xPad;
+
+									// Reset stack					
+									stackOffset = 0;
+									stackSpace = 0;
+								}
+
+								// Position the symbol
+								symbolFrame.x = x;
+								symbolFrame.y = y + stackOffset;
+
+								// Increase stackOffset for next symbol
+								stackOffset += symbolFrame.height() + yStackPad;
+							}
 						}
 
 						// Update group position variables per the layout direction
@@ -337,6 +351,7 @@ var onRun = function(context) {
 		var defaultSettings = {};
 		defaultSettings.groupDepth = 1;
 		defaultSettings.displayTitles = 0;
+		defaultSettings.compactLayout = 1;
 		defaultSettings.sortDirection = 0;
 		defaultSettings.xPad = '100';
 		defaultSettings.yPad = '100';
@@ -355,20 +370,23 @@ var onRun = function(context) {
 		alertWindow.setMessageText(pluginName);
 
 		// Grouping options
-		var groupFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,124));
+		var groupFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,152));
 		alertWindow.addAccessoryView(groupFrame);
 
-		var groupGranularityLabel = createLabel('Group Definition',12,NSMakeRect(0,108,140,16));
+		var groupGranularityLabel = createLabel('Group Definition',12,NSMakeRect(0,136,140,16));
 		groupFrame.addSubview(groupGranularityLabel);
 
-		var groupGranularityDescription = createDescription('Symbol Organizer uses a "/" in the name of each symbol to define the groups. This setting determines which "/" should be used.',11,NSMakeRect(0,62,300,42));
+		var groupGranularityDescription = createDescription('Symbol Organizer uses a "/" in the name of each symbol to define the groups. This setting determines which "/" should be used.',11,NSMakeRect(0,90,300,42));
 		groupFrame.addSubview(groupGranularityDescription);
 
-		var groupGranularityValue = createSelect(['1st','2nd','3rd','4th','5th','6th','7th','8th'],defaultSettings.groupDepth,NSMakeRect(0,26,60,28));
+		var groupGranularityValue = createSelect(['1st','2nd','3rd','4th','5th','6th','7th','8th'],defaultSettings.groupDepth,NSMakeRect(0,54,60,28));
 		groupFrame.addSubview(groupGranularityValue);
 
-		var groupTitlesCheckbox = createCheckbox({name:"Display group titles",value:1},defaultSettings.displayTitles,NSMakeRect(0,0,300,18));
+		var groupTitlesCheckbox = createCheckbox({name:"Display group titles",value:1},defaultSettings.displayTitles,NSMakeRect(0,28,300,18));
 		groupFrame.addSubview(groupTitlesCheckbox);
+
+		var compactLayoutCheckbox = createCheckbox({name:"Compact layout",value:1},defaultSettings.compactLayout,NSMakeRect(0,0,300,18));
+		groupFrame.addSubview(compactLayoutCheckbox);
 
 		// Layout options
 		var layoutFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,239));
@@ -425,6 +443,7 @@ var onRun = function(context) {
 		setKeyOrder(alertWindow,[
 			groupGranularityValue,
 			groupTitlesCheckbox,
+			compactLayoutCheckbox,
 			layoutDirectionValue,
 			layoutHorizontalValue,
 			layoutVerticalValue,
@@ -441,6 +460,7 @@ var onRun = function(context) {
 			try {
 				[command setValue:[groupGranularityValue indexOfSelectedItem] forKey:"groupDepth" onLayer:page];
 				[command setValue:[groupTitlesCheckbox state] forKey:"displayTitles" onLayer:page];
+				[command setValue:[compactLayoutCheckbox state] forKey:"compactLayout" onLayer:page];
 				[command setValue:[[layoutDirectionValue selectedCell] tag] forKey:"sortDirection" onLayer:page];
 				[command setValue:[layoutHorizontalValue stringValue] forKey:"xPad" onLayer:page];
 				[command setValue:[layoutVerticalValue stringValue] forKey:"yPad" onLayer:page];
@@ -456,6 +476,7 @@ var onRun = function(context) {
 			return {
 				groupDepth : [groupGranularityValue indexOfSelectedItem],
 				displayTitles : [groupTitlesCheckbox state],
+				compactLayout : [compactLayoutCheckbox state],
 				sortDirection : [[layoutDirectionValue selectedCell] tag],
 				xPad : [layoutHorizontalValue stringValue],
 				yPad : [layoutVerticalValue stringValue],
