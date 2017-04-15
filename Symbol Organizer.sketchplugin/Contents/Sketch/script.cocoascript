@@ -21,6 +21,8 @@ var onRun = function(context) {
 				var y = 0;
 				var xPad = parseInt(layoutSettings.xPad);
 				var yPad = parseInt(layoutSettings.yPad);
+				var xStackPad = xPad/2;
+				var yStackPad = yPad/2;
 				var maxPer = (layoutSettings.maxPer > 0) ? layoutSettings.maxPer : 0;
 
 				// Title variables
@@ -147,6 +149,8 @@ var onRun = function(context) {
 
 					// Set tracker/counters
 					var groupSpace = 0;
+					var stackOffset = 0;
+					var stackSpace = 0;
 					var groupCount = 1;
 					var objectCount = 1;
 
@@ -191,6 +195,10 @@ var onRun = function(context) {
 							// Reset the group space tracker
 							groupSpace = 0;
 
+							// Reset the stack space tackers
+							stackOffset = 0;
+							stackSpace = 0;
+
 							// Increment the group counter
 							groupCount++;
 
@@ -214,16 +222,50 @@ var onRun = function(context) {
 							// Reset the group space tracker
 							groupSpace = 0;
 
+							// Reset the stack space tacker
+							stackOffset = 0;
+							stackSpace = 0;
+
 							// Reset the object counter
 							objectCount = 1;
 						}
 
 						// Position the symbol
-						symbolFrame.x = x;
-						symbolFrame.y = y;
+						if (layoutSettings.sortDirection == 0) {
+							// If the symbol can't be stacked
+							if (stackOffset + symbolFrame.width() > groupLayout[i]['groupMax']){
+								// Increase the y position
+								y += stackSpace + yPad;
 
-						// asdf
-						log(symbol.name() + " " + x + " " + y + " " + groupLayout[i]['groupMax']);
+								// Reset stack					
+								stackOffset = 0;
+								stackSpace = 0;
+							}
+
+							// Position the symbol
+							symbolFrame.y = y;
+							symbolFrame.x = x + stackOffset;
+
+							// Increase stackOffset for next symbol
+							stackOffset += symbolFrame.width() + xStackPad;
+						} else {
+							// If the symbol can't be stacked
+							if (stackOffset + symbolFrame.height() > groupLayout[i]['groupMax']){
+								// Increase the x position
+								x += stackSpace + xPad;
+
+								// Reset stack					
+								stackOffset = 0;
+								stackSpace = 0;
+							}
+
+							// Position the symbol
+							symbolFrame.x = x;
+							symbolFrame.y = y + stackOffset;
+
+							// Increase stackOffset for next symbol
+							stackOffset += symbolFrame.height() + yStackPad;
+						}
 
 						// Update group position variables per the layout direction
 						if (layoutSettings.sortDirection == 0) {
@@ -233,8 +275,11 @@ var onRun = function(context) {
 								groupSpace = symbolFrame.width();
 							}
 
-							// Set the y position for the next symbol
-							y += symbolFrame.height() + yPad;
+							// If this symbol is taller than previous symbols in stack
+							if (symbolFrame.height() > stackSpace) {
+								// Increase the height of the stack
+								stackSpace = symbolFrame.height();
+							}
 						} else {
 							// If this symbol is taller than previous symbols in row
 							if (symbolFrame.height() > groupSpace) {
@@ -242,8 +287,11 @@ var onRun = function(context) {
 								groupSpace = symbolFrame.height();
 							}
 
-							// Set the x position for the next symbol
-							x += symbolFrame.width() + xPad;
+							// If this symbol is wider than previous symbols in stack
+							if (symbolFrame.width() > stackSpace) {
+								// Increase the width of the stack
+								stackSpace = symbolFrame.width();
+							}
 						}
 
 						// Increment the object counter
