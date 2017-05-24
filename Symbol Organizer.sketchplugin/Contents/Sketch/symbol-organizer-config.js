@@ -1,3 +1,5 @@
+@import 'functions.js';
+
 var onRun = function(context) {
 	var pluginName = "Symbol Organizer";
 
@@ -8,7 +10,7 @@ var onRun = function(context) {
 	var page = doc.currentPage();
 
 	// If the current page has symbols...
-	if (pageHasSymbols()) {
+	if (page.symbols().count() != 0) {
 		// If the current page only contains symbols...
 		if (page.artboards().count() == page.symbols().count()) {
 			// Get layout settings
@@ -110,7 +112,7 @@ var onRun = function(context) {
 				if (titleGroup) page.removeLayer(titleGroup);
 
 				// If the document still has symbols...
-				if (pageHasSymbols()) {
+				if (page.symbols().count() != 0) {
 					// Create a symbols object, of either all symbols or just Symbols page symbols
 					var symbols = (layoutSettings.gatherSymbols == 1) ? doc.documentData().allSymbols() : page.symbols();
 
@@ -135,7 +137,7 @@ var onRun = function(context) {
 					// If user wants to display group titles...
 					if (layoutSettings.displayTitles == 1) {
 						// Add title style
-						addTextStyle(titleStyleName,titleStyleFont,titleTextSize,titleTextHeight,titleTextAlign);
+						addTextStyle(context,titleStyleName,titleStyleFont,titleTextSize,titleTextHeight,titleTextAlign);
 
 						// Add title group
 						titleGroup = addLayerGroup(page,titleGroupName,titleGroupX,titleGroupY,true);
@@ -172,7 +174,7 @@ var onRun = function(context) {
 							}
 
 							// Add the title into the title group
-							addGroupTitle(titleGroup,groupLayout[i]['prefix'],titleTextX,titleTextY,titleTextAlign);
+							addGroupTitle(context,titleStyleName,titleGroup,groupLayout[i]['prefix'],titleTextX,titleTextY,titleTextAlign);
 						}
 
 						// If the current group number doesn't match the group counter
@@ -254,7 +256,7 @@ var onRun = function(context) {
 					}
 
 					// Collapse symbols
-					actionWithType("MSCollapseAllGroupsAction").doPerformAction(nil);
+					actionWithType(context,"MSCollapseAllGroupsAction").doPerformAction(nil);
 
 					// Feedback to user
 					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
@@ -262,23 +264,15 @@ var onRun = function(context) {
 					} else {
 						doc.showMessage("Symbol layout complete!");
 					}
+				} else {
+					displayDialog("There are no symbols to organize on this page.",pluginName);
 				}
 			}
 		} else {
 			displayDialog("This page contains artboards and symbols. Symbol Organizer can only be used on pages with just symbols.",pluginName);
 		}
-	}
-
-	function displayDialog(body,title) {
-		var app = NSApplication.sharedApplication();
-		app.displayDialog_withTitle(body,title);
-	}
-
-	function pageHasSymbols() {
-		if (context.document.currentPage().symbols().count() == 0) {
-			displayDialog("There are no symbols to organize on this page.",pluginName);
-			return false;
-		} return true;
+	} else {
+		displayDialog("There are no symbols to organize on this page.",pluginName);
 	}
 
 	function getLayoutSettings() {
@@ -310,7 +304,7 @@ var onRun = function(context) {
 		var groupGranularityLabel = createLabel('Group Definition',12,NSMakeRect(0,108,140,16));
 		groupFrame.addSubview(groupGranularityLabel);
 
-		var groupGranularityDescription = createDescription('Symbol Organizer uses a "/" in the name of each symbol to define the groups. This setting determines which "/" should be used.',11,NSMakeRect(0,62,300,42));
+		var groupGranularityDescription = createDescription('Symbol Organizer uses a "/" in the name of\neach symbol to determine the grouping. This\nsetting specifies which "/" should be used.',11,NSMakeRect(0,62,300,42));
 		groupFrame.addSubview(groupGranularityDescription);
 
 		var groupGranularityValue = createSelect(['1st','2nd','3rd','4th','5th','6th','7th','8th'],defaultSettings.groupDepth,NSMakeRect(0,26,60,28));
@@ -363,7 +357,7 @@ var onRun = function(context) {
 		var removeSymbolsCheckbox = createCheckbox({name:"Remove unused symbols",value:1},defaultSettings.removeSymbols,NSMakeRect(0,42,300,18));
 		otherFrame.addSubview(removeSymbolsCheckbox);
 
-		var removeSymbolsDescription = createDescription('This option will NOT remove nested symbols, symbols with nested symbols, symbols used as overrides, or symbols that reside on other pages.',11,NSMakeRect(18,0,282,42));
+		var removeSymbolsDescription = createDescription('Removes unused symbols on the current page.\nSymbols which are nested in other symbols, or\nused as overrides, will NOT be removed.',11,NSMakeRect(18,0,282,42));
 		otherFrame.addSubview(removeSymbolsDescription);
 
 		// Buttons
@@ -417,97 +411,6 @@ var onRun = function(context) {
 		} else return false;
 	}
 
-	function createSelect(items,selectedItemIndex,frame) {
-		selectedItemIndex = (selectedItemIndex > -1) ? selectedItemIndex : 0;
-		var comboBox = [[NSComboBox alloc] initWithFrame:frame];
-		[comboBox addItemsWithObjectValues:items];
-		[comboBox selectItemAtIndex:selectedItemIndex];
-
-		return comboBox;
-	}
-
-	function createRadioButtons(options,selected,format,x,y) {
-		// Set number of rows and columns
-		if (!format || format == 0) {
-			var rows = options.length;
-			var columns = 1;
-			var buttonMatrixWidth = 300;
-			var buttonCellWidth = buttonMatrixWidth;
-		} else {
-			var rows = options.length / 2;
-			var columns = 2;
-			var buttonMatrixWidth = 300;
-			var buttonCellWidth = buttonMatrixWidth / columns;
-		}
-
-		var x = (x) ? x : 0;
-		var y = (y) ? y : 0;
-
-		// Make a prototype cell
-		var buttonCell = [[NSButtonCell alloc] init];
-		[buttonCell setButtonType:NSRadioButton]
-
-		// Make a matrix to contain the radio cells
-		var buttonMatrix = [[NSMatrix alloc] initWithFrame: NSMakeRect(x,y,buttonMatrixWidth,rows*25) mode:NSRadioModeMatrix prototype:buttonCell numberOfRows:rows numberOfColumns:columns];
-		[buttonMatrix setCellSize: NSMakeSize(buttonCellWidth,20)];
-
-		// Create a cell for each option
-		for (i = 0; i < options.length; i++) {
-			[[[buttonMatrix cells] objectAtIndex: i] setTitle: options[i]];
-			[[[buttonMatrix cells] objectAtIndex: i] setTag: i];
-		}
-
-		// Select the default cell
-		[buttonMatrix selectCellAtRow:selected column:0]
-
-		// Return the matrix
-		return buttonMatrix;
-	}
-
-	function createField(value,frame) {
-		var field = [[NSTextField alloc] initWithFrame:frame];
-		[field setStringValue:value];
-
-		return field;
-	}
-
-	function createLabel(text,size,frame) {
-		var label = [[NSTextField alloc] initWithFrame:frame];
-		[label setStringValue:text];
-		[label setFont:[NSFont boldSystemFontOfSize:size]];
-		[label setBezeled:false];
-		[label setDrawsBackground:false];
-		[label setEditable:false];
-		[label setSelectable:false];
-
-		return label;
-	}
-
-	function createDescription(text,size,frame) {
-		var label = [[NSTextField alloc] initWithFrame:frame];
-		[label setStringValue:text];
-		[label setFont:[NSFont systemFontOfSize:size]];
-		[label setTextColor:[NSColor colorWithCalibratedRed:(0/255) green:(0/255) blue:(0/255) alpha:0.6]];
-		[label setBezeled:false];
-		[label setDrawsBackground:false];
-		[label setEditable:false];
-		[label setSelectable:false];
-
-		return label;
-	}
-
-	function createCheckbox(item,flag,frame) {
-		flag = ( flag == false ) ? NSOffState : NSOnState;
-		var checkbox = [[NSButton alloc] initWithFrame:frame];
-		[checkbox setButtonType: NSSwitchButton];
-		[checkbox setBezelStyle: 0];
-		[checkbox setTitle: item.name];
-		[checkbox setTag: item.value];
-		[checkbox setState: flag];
-
-		return checkbox;
-	}
-
 	function pushOverrideSymbolIDtoArray(overrideObject,array) {
 		if (
 			overrideObject.class() == "__NSDictionaryI" ||
@@ -542,45 +445,6 @@ var onRun = function(context) {
 		if (count != 0) {
 			removeUnusedSymbols();
 		}
-	}
-
-	function findLayerByName(scope,name,type) {
-		var scope = scope.layers();
-
-		if (scope) {
-			for (var i = 0; i < scope.count(); i++) {
-				var layerName = scope.objectAtIndex(i).name().trim();
-
-				if ((!type && layerName == name) || (type && layerName == name && scope.objectAtIndex(i) instanceof type)) {
-					return scope.objectAtIndex(i);
-				}
-			}
-		}
-
-		return false;
-	}
-
-	function renameDuplicateSymbols(symbols) {
-		var symbolLoop = symbols.objectEnumerator();
-		var symbol;
-		var lastSymbolName;
-		var duplicateSymbolCount = 0;
-
-		while (symbol = symbolLoop.nextObject()) {
-			var thisSymbolName = String(symbol.name());
-
-			if (thisSymbolName == lastSymbolName) {
-				duplicateSymbolCount++;
-
-				symbol.setName(thisSymbolName + " Copy " + duplicateSymbolCount);
-			} else {
-				duplicateSymbolCount = 0;
-			}
-
-			lastSymbolName = thisSymbolName;
-		}
-
-		return symbols;
 	}
 
 	function sortLayerList(symbols,order) {
@@ -642,102 +506,6 @@ var onRun = function(context) {
 		return groupLayout;
 	}
 
-	function getCharPosition(string,match,count) {
-		var actualCount = string.split(match).length - 1;
-
-		if (actualCount < count) {
-			return string.split(match,actualCount).join(match).length;
-		} else {
-			return string.split(match,count).join(match).length;
-		}
-	}
-
-	function addTextStyle(styleName,fontName,fontSize,fontLineHeight,textAlignment) {
-		getTextStyleByName(styleName,1);
-
-		var textStyles = doc.documentData().layerTextStyles();
-
-		var textStyle = [[MSTextLayer alloc] initWithFrame:nil];
-		textStyle.setFontSize(fontSize);
-		textStyle.setLineHeight(fontLineHeight);
-		textStyle.setTextAlignment(textAlignment);
-		textStyle.setFontPostscriptName(fontName);
-
-		textStyles.addSharedStyleWithName_firstInstance(styleName,textStyle.style());
-	}
-
-	function getTextStyleByName(styleName,removeStyle) {
-		var textStyles = doc.documentData().layerTextStyles().objects();
-
-		if (textStyles) {
-			for (var i = 0; i < textStyles.count(); i++) {
-				if (textStyles.objectAtIndex(i).name() == styleName) {
-					if (removeStyle && removeStyle == 1) {
-						doc.documentData().layerTextStyles().removeSharedStyle(textStyles.objectAtIndex(i));
-						return false;
-					} else {
-						return textStyles.objectAtIndex(i);
-					}
-				}
-			}
-		}
-
-		return false;
-	}
-
-	function addLayerGroup(output,layerName,x,y,isUnique) {
-		var layerGroup = findLayerByName(output,layerName);
-
-		if (isUnique && layerGroup) {
-			layerGroup.frame().setX(x);
-			layerGroup.frame().setY(y);
-		} else {
-			layerGroup = MSLayerGroup.new();
-			layerGroup.setName(layerName);
-			layerGroup.frame().setX(x);
-			layerGroup.frame().setY(y);
-
-			output.addLayers([layerGroup]);
-		}
-
-		return layerGroup;
-	}
-
-	function addGroupTitle(titleGroup,title,x,y,alignment) {
-		// Add screen title
-		var screenTitle = addTextLayer(titleGroup,title,title,0,false);
-
-		// Set screen title position
-		if (alignment == 0) {
-			screenTitle.frame().setY(y);
-			screenTitle.frame().setX(x);
-		} else {
-			screenTitle.frame().setY(y);
-			screenTitle.frame().setX(x-screenTitle.frame().width());
-		}
-
-		var screenTitleStyle = getTextStyleByName(titleStyleName);
-
-		// Set screen title style
-		screenTitle.setStyle(screenTitleStyle.newInstance());
-	}
-
-	function addTextLayer(output,layerName,layerValue,layerWidth,isLocked) {
-		var textLayer = MSTextLayer.new();
-		textLayer.setStringValue(layerValue);
-		textLayer.setName(layerName);
-		textLayer.setIsLocked(isLocked);
-
-		if (layerWidth > 0) {
-			textLayer.setTextBehaviour(1);
-			textLayer.frame().setWidth(layerWidth);
-		}
-
-		output.addLayers([textLayer]);
-
-		return textLayer;
-	}
-
 	function getCachedSettings(location,settings) {
 		try {
 			for (i in settings) {
@@ -749,29 +517,6 @@ var onRun = function(context) {
 			return settings;
 		} catch(err) {
 			log("Unable to fetch settings.");
-		}
-	}
-
-	function setKeyOrder(alert,order) {
-		for (var i = 0; i < order.length; i++) {
-			var thisItem = order[i];
-			var nextItem = order[i+1];
-
-			if (nextItem) thisItem.setNextKeyView(nextItem);
-		}
-
-		alert.alert().window().setInitialFirstResponder(order[0]);
-	}
-
-	function actionWithType(type) {
-		var controller = doc.actionsController();
-
-		if (controller.actionWithName) {
-			return controller.actionWithName(type);
-		} else if (controller.actionWithID) {
-			return controller.actionWithID(type);
-		} else {
-			return controller.actionForID(type);
 		}
 	}
 };
