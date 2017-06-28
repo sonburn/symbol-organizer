@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"  xmlns:dc="http://purl.org/dc/elements/1.1/">
+	<channel>
+		<title>Symbol Organizer</title>
+		<link>http://sparkle-project.org/files/sparkletestcast.xml</link>
+		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
+		<language>en</language>
+		<item>
+			<title>Version 11.3</title>
+			<description>
+				<![CDATA[
+				<ul>
+				<li>Sketch 45 fixes and appcast plugin update support.</li>
+				</ul>
+				]]>
+			</description>
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="11.3" />
+		</item>
+	</channel>
+</rss>
