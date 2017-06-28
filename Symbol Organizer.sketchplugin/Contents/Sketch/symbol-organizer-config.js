@@ -465,7 +465,7 @@ var onRun = function(context) {
 		}
 
 		for (var i = 0; i < symbolIndices.length; i++) {
-			[[doc currentPage] insertLayers:[NSArray arrayWithObject:symbols[i]] atIndex:symbolIndices[i]];
+			[[doc currentPage] insertLayer:symbols[i] atIndex:symbolIndices[i]];
 		}
 	}
 
