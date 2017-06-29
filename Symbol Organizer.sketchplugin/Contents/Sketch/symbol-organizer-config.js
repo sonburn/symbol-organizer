@@ -139,10 +139,11 @@ var onRun = function(context) {
 						// Add title style
 						addTextStyle(context,titleStyleName,titleStyleFont,titleTextSize,titleTextHeight,titleTextAlign);
 
-						// Add title group
-						titleGroup = addLayerGroup(page,titleGroupName,titleGroupX,titleGroupY,true);
-
-						// Set clickThrough and lock title group
+						// Create new screen title group
+						titleGroup = MSLayerGroup.new();
+						titleGroup.setName(titleGroupName);
+						titleGroup.frame().setX(titleGroupX);
+						titleGroup.frame().setY(titleGroupY);
 						titleGroup.setIsLocked(true);
 						titleGroup.setHasClickThrough(true);
 					}
@@ -173,8 +174,25 @@ var onRun = function(context) {
 								titleTextAlign = 1;
 							}
 
-							// Add the title into the title group
-							addGroupTitle(context,titleStyleName,titleGroup,groupLayout[i]['prefix'],titleTextX,titleTextY,titleTextAlign);
+							// Create screen title
+							var screenTitle = MSTextLayer.new();
+							screenTitle.setStringValue(groupLayout[i]['prefix']);
+							screenTitle.setName(groupLayout[i]['prefix']);
+
+							if (titleTextAlign == 0) {
+								screenTitle.frame().setY(titleTextY);
+								screenTitle.frame().setX(titleTextX);
+							} else {
+								screenTitle.frame().setY(titleTextY);
+								screenTitle.frame().setX(titleTextX-screenTitle.frame().width());
+							}
+
+							// Set screen title style
+							var screenTitleStyle = getTextStyleByName(context,titleStyleName);
+							screenTitle.setStyle(screenTitleStyle.newInstance());
+
+							// Add screen title to title group
+							titleGroup.addLayers([screenTitle]);
 						}
 
 						// If the current group number doesn't match the group counter
@@ -251,8 +269,8 @@ var onRun = function(context) {
 
 					// If user wants to display group titles...
 					if (layoutSettings.displayTitles == 1) {
-						// Resize the titles group to ensure dimensions reflect contents
-						titleGroup.resizeToFitChildrenWithOption(0);
+						// Add title group to page
+						page.addLayers([titleGroup]);
 					}
 
 					// Collapse symbols

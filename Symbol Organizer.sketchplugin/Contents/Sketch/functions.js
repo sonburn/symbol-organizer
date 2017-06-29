@@ -10,59 +10,6 @@ function actionWithType(context,type) {
 	}
 }
 
-function addGroupTitle(context,titleStyleName,titleGroup,title,x,y,alignment) {
-	// Add screen title
-	var screenTitle = addTextLayer(titleGroup,title,title,0,false);
-
-	// Set screen title position
-	if (alignment == 0) {
-		screenTitle.frame().setY(y);
-		screenTitle.frame().setX(x);
-	} else {
-		screenTitle.frame().setY(y);
-		screenTitle.frame().setX(x-screenTitle.frame().width());
-	}
-
-	var screenTitleStyle = getTextStyleByName(context,titleStyleName);
-
-	// Set screen title style
-	screenTitle.setStyle(screenTitleStyle.newInstance());
-}
-
-function addLayerGroup(output,layerName,x,y,isUnique) {
-	var layerGroup = findLayerByName(output,layerName);
-
-	if (isUnique && layerGroup) {
-		layerGroup.frame().setX(x);
-		layerGroup.frame().setY(y);
-	} else {
-		layerGroup = MSLayerGroup.new();
-		layerGroup.setName(layerName);
-		layerGroup.frame().setX(x);
-		layerGroup.frame().setY(y);
-
-		output.addLayers([layerGroup]);
-	}
-
-	return layerGroup;
-}
-
-function addTextLayer(output,layerName,layerValue,layerWidth,isLocked) {
-	var textLayer = MSTextLayer.new();
-	textLayer.setStringValue(layerValue);
-	textLayer.setName(layerName);
-	textLayer.setIsLocked(isLocked);
-
-	if (layerWidth > 0) {
-		textLayer.setTextBehaviour(1);
-		textLayer.frame().setWidth(layerWidth);
-	}
-
-	output.addLayers([textLayer]);
-
-	return textLayer;
-}
-
 function addTextStyle(context,styleName,fontName,fontSize,fontLineHeight,textAlignment) {
 	getTextStyleByName(context,styleName,1);
 
