@@ -150,6 +150,7 @@ var onRun = function(context) {
 
 					// Set tracker/counters
 					var groupSpace = 0;
+					var gPad = parseInt(layoutSettings.gPad);
 					var groupCount = 1;
 					var objectCount = 1;
 
@@ -168,9 +169,9 @@ var onRun = function(context) {
 
 							// Update title position variables per the layout direction
 							if (layoutSettings.sortDirection == 0) {
-								titleTextX = (objectCount == 1) ? 0 : x+groupSpace+xPad;
+								titleTextX = (objectCount == 1) ? 0 : x+groupSpace+gPad+xPad;
 							} else {
-								titleTextY = (objectCount == 1) ? 0 : y+groupSpace+yPad;
+								titleTextY = (objectCount == 1) ? 0 : y+groupSpace+gPad+yPad;
 								titleTextAlign = 1;
 							}
 
@@ -201,11 +202,11 @@ var onRun = function(context) {
 							if (layoutSettings.sortDirection == 0) {
 								// Reset y position, set the x position of the next row
 								y = 0;
-								x += groupSpace + xPad;
+								x += groupSpace + gPad + xPad;
 							} else {
 								// Reset x position, set the y position of the next row
 								x = 0;
-								y += groupSpace + yPad;
+								y += groupSpace + gPad + yPad;
 							}
 
 							// Reset the group space tracker
