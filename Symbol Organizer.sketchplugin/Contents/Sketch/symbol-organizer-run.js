@@ -326,6 +326,7 @@ var onRun = function(context) {
 		defaultSettings.sortDirection = 0;
 		defaultSettings.xPad = '100';
 		defaultSettings.yPad = '100';
+		defaultSettings.gPad = '150';
 		defaultSettings.maxPer = '';
 		defaultSettings.reverseOrder = 0;
 		defaultSettings.renameSymbols = 0;
@@ -341,6 +342,7 @@ var onRun = function(context) {
 			sortDirection : defaultSettings.sortDirection,
 			xPad : defaultSettings.xPad,
 			yPad : defaultSettings.yPad,
+			gPad : defaultSettings.gPad,
 			maxPer : defaultSettings.maxPer,
 			reverseOrder : defaultSettings.reverseOrder,
 			renameSymbols : defaultSettings.renameSymbols,
