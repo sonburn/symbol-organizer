@@ -18,10 +18,10 @@ Organize your symbols page, and layer list, alphabetically and into groupings de
 1. Download and open symbol-organizer-master.zip
 2. Navigate to Symbol Organizer.sketchplugin and copy/move to your plugins directory
 
-   To find your plugins directory,
+To find your plugins directory...
 
-   1. In the Sketch menu, navigate to Plugins > Manage Plugins...
-   2. Click the cog in the lower left of the plugins window, and click Reveal Plugins Folder
+1. In the Sketch menu, navigate to Plugins > Manage Plugins...
+2. Click the cog in the lower left of the plugins window, and click Reveal Plugins Folder
 
 # Changelog
 
