@@ -13,6 +13,11 @@ Organize your symbols page, and layer list, alphabetically and into groupings de
 
 # Installation
 
+## Automatic
+Search for Symbol Organizer in [Sketchrunner](http://sketchrunner.com/), [Sketchpacks](https://sketchpacks.com/), or [Sketch Toolbox](http://sketchtoolbox.com/) if you have one of those installed.
+
+Once installed, Sketch will automatically notify you when an update is available (version 11.3 and later).
+
 ## Manual
 
 1. Download and open symbol-organizer-master.zip
