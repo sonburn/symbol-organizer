@@ -6,6 +6,11 @@ Organize your symbols page, and layer list, alphabetically and into groupings de
 
 <a href="http://bit.ly/SketchRunnerWebsite"><img height="40" width="160" src="http://sketchrunner.com/img/badge_blue.png"></a>
 
+# Usage
+
+* cmd option shift o - Configure and run Symbol Organizer
+* cmd option control o - Run Symbol Organizer using last settings
+
 # Installation
 
 ## Manual
