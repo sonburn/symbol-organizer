@@ -10,18 +10,28 @@ function actionWithType(context,type) {
 	}
 }
 
-function addTextStyle(context,styleName,fontName,fontSize,fontLineHeight,textAlignment) {
-	getTextStyleByName(context,styleName,1);
-
+function addTextStyle(context,styleName,theStyle) {
 	var textStyles = context.document.documentData().layerTextStyles();
+	textStyles.addSharedStyleWithName_firstInstance(styleName,theStyle.style());
 
+	return getTextStyleByName(context,styleName);
+}
+
+function updateTextStyle(context,styleName,theStyle) {
+	var textStyles = context.document.documentData().layerTextStyles();
+	textStyles.updateValueOfSharedObject_byCopyingInstance(getTextStyleByName(context,styleName),theStyle.style());
+
+	return getTextStyleByName(context,styleName);
+}
+
+function createTextStyle(fontName,fontSize,fontLineHeight,textAlignment) {
 	var textStyle = [[MSTextLayer alloc] initWithFrame:nil];
 	textStyle.setFontSize(fontSize);
 	textStyle.setLineHeight(fontLineHeight);
 	textStyle.setTextAlignment(textAlignment);
 	textStyle.setFontPostscriptName(fontName);
 
-	textStyles.addSharedStyleWithName_firstInstance(styleName,textStyle.style());
+	return textStyle;
 }
 
 function createSelect(items,selectedItemIndex,frame) {

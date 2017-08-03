@@ -6,15 +6,15 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 11.4</title>
+			<title>Version 11.5</title>
 			<description>
 				<![CDATA[
 				<ul>
-				<li>Sketch 45 fix for symbol group titles.</li>
+				<li>Updated default title font to SF UI Text, and will also now respect user modifications to Symbol Group Title style.</li>
 				</ul>
 				]]>
 			</description>
-			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="11.4" />
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="11.5" />
 		</item>
 	</channel>
 </rss>

@@ -25,16 +25,6 @@ var onRun = function(context) {
 				var yPad = parseInt(layoutSettings.yPad);
 				var maxPer = (layoutSettings.maxPer > 0) ? layoutSettings.maxPer : 0;
 
-				// Title variables
-				var titleGroupName = 'Titles';
-				var titleStyleName = 'Symbol Group Title';
-				var titleStyleFont = 'Helvetica Neue Medium Italic';
-				var titleTextSize = 20;
-				var titleTextHeight = 24;
-				var titleTextAlign = (layoutSettings.sortDirection == 0) ? 0 : 1;
-				var titleGroupX = (layoutSettings.sortDirection == 0) ? 0 : -xPad;
-				var titleGroupY = (layoutSettings.sortDirection == 0) ? -(titleTextHeight+yPad) : 0;
-
 				// If user wants to remove unused symbols...
 				if (layoutSettings.removeSymbols == 1) {
 					// Document variables
@@ -105,6 +95,9 @@ var onRun = function(context) {
 					removeUnusedSymbols();
 				}
 
+				// Title group name
+				var titleGroupName = 'Titles';
+
 				// Find titles group
 				var titleGroup = findLayerByName(page,titleGroupName);
 
@@ -136,14 +129,45 @@ var onRun = function(context) {
 
 					// If user wants to display group titles...
 					if (layoutSettings.displayTitles == 1) {
-						// Add title style
-						addTextStyle(context,titleStyleName,titleStyleFont,titleTextSize,titleTextHeight,titleTextAlign);
+						// Title style variables
+						var titleStyleName = 'Symbol Group Title';
+						var titleStyleFont = 'SF UI Text Bold';
+						var titleTextSize = 20;
+						var titleTextHeight = 24;
+						var titleTextAlign = (layoutSettings.sortDirection == 0) ? 0 : 1;
+						var offsetHeight = titleTextHeight;
+
+						// Check for title style
+						var titleStyle = getTextStyleByName(context,titleStyleName);
+
+						// If title style does not exist...
+						if (!titleStyle) {
+							// Add title style
+							titleStyle = addTextStyle(context,titleStyleName,createTextStyle(titleStyleFont,titleTextSize,titleTextHeight,titleTextAlign));
+						} else {
+							// Respect potential for user modified style
+							var screenTitle = MSTextLayer.new();
+							screenTitle.setStringValue('Temp');
+							screenTitle.setName('Temp');
+							screenTitle.setStyle(titleStyle.newInstance());
+
+							titleStyleFont = screenTitle.fontPostscriptName();
+							titleTextSize = screenTitle.fontSize();
+							titleTextHeight = screenTitle.lineHeight();
+
+							if (titleTextHeight == 0) {
+								offsetHeight = screenTitle.frame().height();
+							}
+
+							// Update title style
+							titleStyle = updateTextStyle(context,titleStyleName,createTextStyle(titleStyleFont,titleTextSize,titleTextHeight,titleTextAlign));
+						}
 
 						// Create new screen title group
 						titleGroup = MSLayerGroup.new();
 						titleGroup.setName(titleGroupName);
-						titleGroup.frame().setX(titleGroupX);
-						titleGroup.frame().setY(titleGroupY);
+						titleGroup.frame().setX((layoutSettings.sortDirection == 0) ? 0 : -xPad);
+						titleGroup.frame().setY((layoutSettings.sortDirection == 0) ? -(offsetHeight+yPad) : 0);
 						titleGroup.setIsLocked(true);
 						titleGroup.setHasClickThrough(true);
 					}
@@ -188,8 +212,7 @@ var onRun = function(context) {
 							}
 
 							// Set screen title style
-							var screenTitleStyle = getTextStyleByName(context,titleStyleName);
-							screenTitle.setStyle(screenTitleStyle.newInstance());
+							screenTitle.setStyle(titleStyle.newInstance());
 
 							// Add screen title to title group
 							titleGroup.addLayers([screenTitle]);
@@ -271,6 +294,7 @@ var onRun = function(context) {
 					if (layoutSettings.displayTitles == 1) {
 						// Add title group to page
 						page.addLayers([titleGroup]);
+						titleGroup.resizeToFitChildrenWithOption(0);
 					}
 
 					// Collapse symbols
