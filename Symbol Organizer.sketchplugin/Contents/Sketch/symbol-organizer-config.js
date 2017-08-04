@@ -174,6 +174,7 @@ var onRun = function(context) {
 
 					// Set tracker/counters
 					var groupSpace = 0;
+					var gPad = parseInt(layoutSettings.gPad);
 					var groupCount = 1;
 					var objectCount = 1;
 
@@ -192,9 +193,9 @@ var onRun = function(context) {
 
 							// Update title position variables per the layout direction
 							if (layoutSettings.sortDirection == 0) {
-								titleTextX = (objectCount == 1) ? 0 : x+groupSpace+xPad;
+								titleTextX = (objectCount == 1) ? 0 : x+groupSpace+gPad+xPad;
 							} else {
-								titleTextY = (objectCount == 1) ? 0 : y+groupSpace+yPad;
+								titleTextY = (objectCount == 1) ? 0 : y+groupSpace+gPad+yPad;
 								titleTextAlign = 1;
 							}
 
@@ -224,11 +225,11 @@ var onRun = function(context) {
 							if (layoutSettings.sortDirection == 0) {
 								// Reset y position, set the x position of the next row
 								y = 0;
-								x += groupSpace + xPad;
+								x += groupSpace + gPad + xPad;
 							} else {
 								// Reset x position, set the y position of the next row
 								x = 0;
-								y += groupSpace + yPad;
+								y += groupSpace + gPad + yPad;
 							}
 
 							// Reset the group space tracker
@@ -325,6 +326,7 @@ var onRun = function(context) {
 		defaultSettings.sortDirection = 0;
 		defaultSettings.xPad = '100';
 		defaultSettings.yPad = '100';
+		defaultSettings.gPad = '150';
 		defaultSettings.maxPer = '';
 		defaultSettings.reverseOrder = 0;
 		defaultSettings.renameSymbols = 0;
@@ -371,11 +373,17 @@ var onRun = function(context) {
 		var layoutHorizontalValue = createField(defaultSettings.xPad,NSMakeRect(0,110,60,22));
 		layoutFrame.addSubview(layoutHorizontalValue);
 
-		var layoutVerticalLabel = createLabel('Vertical Space',12,NSMakeRect(0,82,140,16));
+		var layoutVerticalLabel = createLabel('Vertical Space',12,NSMakeRect(140,137,140,16));
 		layoutFrame.addSubview(layoutVerticalLabel);
 
-		var layoutVerticalValue = createField(defaultSettings.yPad,NSMakeRect(0,55,60,22));
+		var layoutVerticalValue = createField(defaultSettings.yPad,NSMakeRect(140,110,60,22));
 		layoutFrame.addSubview(layoutVerticalValue);
+
+		var layoutGroupSpaceLabel = createLabel('Group Space',12,NSMakeRect(0,82,140,16));
+		layoutFrame.addSubview(layoutGroupSpaceLabel);
+
+		var layoutGroupSpaceValue = createField(defaultSettings.gPad,NSMakeRect(0,55,60,22));
+		layoutFrame.addSubview(layoutGroupSpaceValue);
 
 		var layoutMaxLabel = createLabel('Max Per Row/Column',12,NSMakeRect(0,27,140,16));
 		layoutFrame.addSubview(layoutMaxLabel);
@@ -413,6 +421,7 @@ var onRun = function(context) {
 			layoutDirectionValue,
 			layoutHorizontalValue,
 			layoutVerticalValue,
+			layoutGroupSpaceValue,
 			layoutMaxValue,
 			reverseOrderCheckbox,
 			renameSymbolsCheckbox,
@@ -429,6 +438,7 @@ var onRun = function(context) {
 				[command setValue:[[layoutDirectionValue selectedCell] tag] forKey:"sortDirection" onLayer:page];
 				[command setValue:[layoutHorizontalValue stringValue] forKey:"xPad" onLayer:page];
 				[command setValue:[layoutVerticalValue stringValue] forKey:"yPad" onLayer:page];
+				[command setValue:[layoutGroupSpaceValue stringValue] forKey:"gPad" onLayer:page];
 				[command setValue:[layoutMaxValue stringValue] forKey:"maxPer" onLayer:page];
 				[command setValue:[reverseOrderCheckbox state] forKey:"reverseOrder" onLayer:page];
 				[command setValue:[renameSymbolsCheckbox state] forKey:"renameSymbols" onLayer:page];
@@ -444,6 +454,7 @@ var onRun = function(context) {
 				sortDirection : [[layoutDirectionValue selectedCell] tag],
 				xPad : [layoutHorizontalValue stringValue],
 				yPad : [layoutVerticalValue stringValue],
+				gPad : [layoutGroupSpaceValue stringValue],
 				maxPer : [layoutMaxValue stringValue],
 				reverseOrder : [reverseOrderCheckbox state],
 				renameSymbols : [renameSymbolsCheckbox state],
