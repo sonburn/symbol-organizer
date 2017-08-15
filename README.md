@@ -30,6 +30,10 @@ To find your plugins directory...
 
 # Changelog
 
+## 12.0
+
+Improved the Remove Unused Symbols function, it should now be very accurate as it uses the native isSafeToDelete function of MSSymbolMaster. Improved the process for which symbols and the layer list are moved around, no longer removing and re-adding (to avoid another Sketch 45 fiasco) and instead simply moving. Merged the distinct files for Config and Run into a single file. Updated plugin identifier while also preserving user’s previous settings. Made many other housekeeping optimizations.
+
 ## 11.5
 
 Updated default title font to SF UI Text, and will also now respect user modifications to Symbol Group Title style.

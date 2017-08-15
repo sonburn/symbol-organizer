@@ -6,15 +6,15 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 11.5</title>
+			<title>Version 12.0</title>
 			<description>
 				<![CDATA[
 				<ul>
-				<li>Updated default title font to SF UI Text, and will also now respect user modifications to Symbol Group Title style.</li>
+				<li>Improved the Remove Unused Symbols function, it should now be very accurate as it uses the native isSafeToDelete function of MSSymbolMaster. Improved the process for which symbols and the layer list are moved around, no longer removing and re-adding (to avoid another Sketch 45 fiasco) and instead simply moving. Merged the distinct files for Config and Run into a single file. Updated plugin identifier while also preserving user’s previous settings. Made many other housekeeping optimizations.</li>
 				</ul>
 				]]>
 			</description>
-			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="11.5" />
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="12.0" />
 		</item>
 	</channel>
 </rss>

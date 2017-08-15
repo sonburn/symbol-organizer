@@ -24,12 +24,12 @@ function updateTextStyle(context,styleName,theStyle) {
 	return getTextStyleByName(context,styleName);
 }
 
-function createTextStyle(fontName,fontSize,fontLineHeight,textAlignment) {
-	var textStyle = [[MSTextLayer alloc] initWithFrame:nil];
-	textStyle.setFontSize(fontSize);
-	textStyle.setLineHeight(fontLineHeight);
-	textStyle.setTextAlignment(textAlignment);
-	textStyle.setFontPostscriptName(fontName);
+function createTextStyle(styleData) {
+	var textStyle = MSTextLayer.alloc().initWithFrame(nil);
+	textStyle.setFontSize(styleData.fontSize);
+	textStyle.setLineHeight(styleData.lineHeight);
+	textStyle.setTextAlignment(styleData.textAlignment);
+	textStyle.setFontPostscriptName(styleData.fontFace);
 
 	return textStyle;
 }
@@ -207,4 +207,65 @@ function setKeyOrder(alert,order) {
 	}
 
 	alert.alert().window().setInitialFirstResponder(order[0]);
+}
+
+function createGroupObject(symbols,depth) {
+	// Group variables
+	var groupCount = 0;
+	var groupLayout = [];
+	var lastGroupPrefix;
+
+	// Iterate through the symbols
+	for (var i = 0; i < symbols.count(); i++) {
+		// Symbol variables
+		var symbol = symbols.objectAtIndex(i);
+		var symbolName = symbol.name();
+
+		// Determine a break point in the symbol name
+		var breakPoint = (symbolName.indexOf("/") != -1) ? getCharPosition(symbolName,"/",depth+1) : 0;
+
+		// Set a prefix for current group
+		var thisGroupPrefix = (breakPoint > 0) ? symbolName.slice(0,breakPoint) : symbolName;
+
+		// If this group prefix is not the same as last group
+		if (lastGroupPrefix != thisGroupPrefix) {
+			// Increment the group counter
+			groupCount++;
+		}
+
+		// Add an entry to the group object
+		groupLayout.push({
+			prefix: thisGroupPrefix,
+			group: groupCount
+		});
+
+		// Set the last group prefix to current prefix
+		lastGroupPrefix = thisGroupPrefix;
+	}
+
+	return groupLayout;
+}
+
+function sortLayerList(symbols,output) {
+	var loop = symbols.objectEnumerator(), symbol;
+
+	while (symbol = loop.nextObject()) {
+		symbol.moveToLayer_beforeLayer(output,nil);
+		symbol.select_byExpandingSelection(false,true);
+	}
+}
+
+function removeUnusedSymbols(context,pluginDomain) {
+	var symbols = context.document.documentData().allSymbols().filteredArrayUsingPredicate(NSPredicate.predicateWithFormat("isSafeToDelete == 1",pluginDomain));
+	var loop = symbols.objectEnumerator(), symbol;
+
+	var count = 0;
+
+	while (symbol = loop.nextObject()) {
+		symbol.removeFromParent();
+		log(symbol.name() + " was removed by Symbol Organizer");
+		count++;
+	}
+
+	return count;
 }
