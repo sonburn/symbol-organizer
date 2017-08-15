@@ -58,6 +58,7 @@ Fix for Sketch 45.
 
 Added keyboard shortcut to quickly run Symbol Organizer using last settings.
 
-# Contact
+# Contact & Support
 
-https://twitter.com/sonburn
+* https://twitter.com/sonburn
+* https://www.paypal.me/sonburn
