@@ -5,11 +5,15 @@ Organize your symbols page, and layer list, alphabetically and into groupings de
 ![Symbol Organizer](https://raw.githubusercontent.com/sonburn/symbol-organizer/master/Screenshots/Symbol%20Organizer.png)
 
 <a href="http://bit.ly/SketchRunnerWebsite">
-	<img width="160" height="40" src="http://bit.ly/RunnerBadgeBlue" alt="runner-badge-blue">
+	<img width="160" height="41" src="http://bit.ly/RunnerBadgeBlue" alt="runner-badge-blue">
 </a>
 
 <a href="https://sketchpacks.com/sonburn/symbol-organizer/install">
-	<img width="160" height="40" src="http://sketchpacks-com.s3.amazonaws.com/assets/badges/sketchpacks-badge-install.png" >
+	<img width="160" height="41" src="http://sketchpacks-com.s3.amazonaws.com/assets/badges/sketchpacks-badge-install.png" >
+</a>
+
+<a href="https://www.paypal.me/sonburn">
+	<img width="160" height="41" src="https://raw.githubusercontent.com/DWilliames/PDF-export-sketch-plugin/master/images/paypal-badge.png">
 </a>
 
 # Usage
@@ -72,7 +76,14 @@ Fix for Sketch 45.
 
 Added keyboard shortcut to quickly run Symbol Organizer using last settings.
 
-# Contact & Support
+# Contact
 
-* https://twitter.com/sonburn
-* https://www.paypal.me/sonburn
+https://twitter.com/sonburn
+
+# Support
+
+If you find this plugin helpful, consider shouting me coffee ☕️ via <a href="https://www.paypal.me/sonburn">PayPal</a>...
+
+<a href="https://www.paypal.me/sonburn">
+	<img width="160" height="41" src="https://raw.githubusercontent.com/DWilliames/PDF-export-sketch-plugin/master/images/paypal-badge.png">
+</a>
