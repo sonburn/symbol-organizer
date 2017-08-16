@@ -40,41 +40,15 @@ To find your plugins directory...
 
 # Changelog
 
-## 12.2
-
-Fixed (another) issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
-
-## 12.1
-
-Fixed issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
-
-## 12.0
-
-Improved the Remove Unused Symbols function, it should now be very accurate as it uses the native isSafeToDelete function of MSSymbolMaster. Improved the process for which symbols and the layer list are moved around, no longer removing and re-adding (to avoid another Sketch 45 fiasco) and instead simply moving. Merged the distinct files for Config and Run into a single file. Updated plugin identifier while also preserving user’s previous settings. Made many other housekeeping optimizations.
-
-## 11.5
-
-Updated default title font to SF UI Text, and will also now respect user modifications to Symbol Group Title style.
-
-## 11.4
-
-Sketch 45 fix for symbol group titles.
-
-## 11.3
-
-Added appcast plugin support for Sketch 45.
-
-## 11.2
-
-Fix for Sketch 45.
-
-## 11.1
-
-Fix for Sketch 45.
-
-## 11.0
-
-Added keyboard shortcut to quickly run Symbol Organizer using last settings.
+* **12.2** - Fixed (another) issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
+* **12.1** - Fixed issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
+* **12.0** - Improved the Remove Unused Symbols function, it should now be very accurate as it uses the native isSafeToDelete function of MSSymbolMaster. Improved the process for which symbols and the layer list are moved around, no longer removing and re-adding (to avoid another Sketch 45 fiasco) and instead simply moving. Merged the distinct files for Config and Run into a single file. Updated plugin identifier while also preserving user’s previous settings. Made many other housekeeping optimizations.
+* **11.5** - Updated default title font to SF UI Text, and will also now respect user modifications to Symbol Group Title style.
+* **11.4** - Sketch 45 fix for symbol group titles.
+* **11.3** - Added appcast plugin support for Sketch 45.
+* **11.2** - Fix for Sketch 45.
+* **11.1** - Fix for Sketch 45.
+* **11.0** - Added keyboard shortcut to quickly run Symbol Organizer using last settings.
 
 # Contact
 
@@ -82,7 +56,7 @@ https://twitter.com/sonburn
 
 # Support
 
-If you find this plugin helpful, consider shouting me coffee ☕️ via <a href="https://www.paypal.me/sonburn">PayPal</a>...
+If you find this plugin helpful, consider shouting me ☕️ via <a href="https://www.paypal.me/sonburn">PayPal</a>...
 
 <a href="https://www.paypal.me/sonburn">
 	<img width="160" height="41" src="https://raw.githubusercontent.com/DWilliames/PDF-export-sketch-plugin/master/images/paypal-badge.png">
