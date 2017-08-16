@@ -4,7 +4,13 @@ Organize your symbols page, and layer list, alphabetically and into groupings de
 
 ![Symbol Organizer](https://raw.githubusercontent.com/sonburn/symbol-organizer/master/Screenshots/Symbol%20Organizer.png)
 
-<a href="http://bit.ly/SketchRunnerWebsite"><img height="40" width="160" src="http://sketchrunner.com/img/badge_blue.png"></a>
+<a href="http://bit.ly/SketchRunnerWebsite">
+	<img src="http://bit.ly/RunnerBadgeBlue">
+</a>
+
+<a href="https://sketchpacks.com/sonburn/symbol-organizer/install">
+	<img width="160" height="41" src="http://sketchpacks-com.s3.amazonaws.com/assets/badges/sketchpacks-badge-install.png" >
+</a>
 
 # Usage
 
@@ -31,6 +37,10 @@ To find your plugins directory...
 # Changelog
 
 ## 12.2
+
+Fixed (another) issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
+
+## 12.1
 
 Fixed issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
 
