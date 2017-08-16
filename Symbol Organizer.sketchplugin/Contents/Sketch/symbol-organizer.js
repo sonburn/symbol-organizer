@@ -704,7 +704,7 @@ function getLayoutSettings(context,type) {
 }
 
 function getCachedSettings(context,location,settings) {
-	var usePluginDomain = (context.document.currentPage().userInfo().valueForKey(oldPluginDomain)) ? oldPluginDomain : pluginDomain;
+	var usePluginDomain = (context.document.currentPage().userInfo() && context.document.currentPage().userInfo().valueForKey(oldPluginDomain)) ? oldPluginDomain : pluginDomain;
 
 	try {
 		for (i in settings) {
