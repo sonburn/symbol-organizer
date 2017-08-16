@@ -6,7 +6,7 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 12.1</title>
+			<title>Version 12.2</title>
 			<description>
 				<![CDATA[
 				<ul>
@@ -14,7 +14,7 @@
 				</ul>
 				]]>
 			</description>
-			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="12.1" />
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="12.2" />
 		</item>
 	</channel>
 </rss>

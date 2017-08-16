@@ -652,7 +652,7 @@ function getLayoutSettings(context,type) {
 				context.command.setValue_forKey_onLayer([gatherSymbolsCheckbox state],"gatherSymbols",page);
 				context.command.setValue_forKey_onLayer(0,"removeSymbols",page);
 
-				if (page.userInfo().valueForKey(oldPluginDomain)) {
+				if (page.userInfo() && page.userInfo().valueForKey(oldPluginDomain)) {
 					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"groupDepth",page,oldPluginDomain);
 					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"displayTitles",page,oldPluginDomain);
 					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"sortDirection",page,oldPluginDomain);

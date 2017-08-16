@@ -30,7 +30,7 @@ To find your plugins directory...
 
 # Changelog
 
-## 12.1
+## 12.2
 
 Fixed issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
 
