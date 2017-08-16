@@ -56,8 +56,4 @@ https://twitter.com/sonburn
 
 # Support
 
-If you find this plugin helpful, consider shouting me ☕️ via <a href="https://www.paypal.me/sonburn">PayPal</a>...
-
-<a href="https://www.paypal.me/sonburn">
-	<img width="160" height="41" src="https://raw.githubusercontent.com/DWilliames/PDF-export-sketch-plugin/master/images/paypal-badge.png">
-</a>
+If you find this plugin helpful, consider shouting me ☕️ via <a href="https://www.paypal.me/sonburn">PayPal</a>.
