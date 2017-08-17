@@ -259,13 +259,51 @@ function removeUnusedSymbols(context,pluginDomain) {
 	var symbols = context.document.documentData().allSymbols().filteredArrayUsingPredicate(NSPredicate.predicateWithFormat("isSafeToDelete == 1",pluginDomain));
 	var loop = symbols.objectEnumerator(), symbol;
 
+	var exemptSymbols = getExemptSymbols(context,pluginDomain);
+
 	var count = 0;
 
 	while (symbol = loop.nextObject()) {
-		symbol.removeFromParent();
-		log(symbol.name() + " was removed by Symbol Organizer");
-		count++;
+		if (exemptSymbols.indexOf(String(symbol.symbolID())) == -1) {
+			symbol.removeFromParent();
+			log(symbol.name() + " was removed by Symbol Organizer");
+			count++;
+		}
 	}
 
 	return count;
+}
+
+function getExemptSymbols(context,pluginDomain) {
+	var exemptSymbols = [];
+	var overrideKey = 'symbolID';
+
+	var pages = context.document.pages();
+	var pageLoop = pages.objectEnumerator(), page;
+
+	while (page = pageLoop.nextObject()) {
+		var symbolInstancesWithOverrides = page.children().filteredArrayUsingPredicate(NSPredicate.predicateWithFormat("className == %@ && overrides != nil","MSSymbolInstance",pluginDomain));
+
+		var symbolInstanceLoop = symbolInstancesWithOverrides.objectEnumerator(), instance;
+
+		while (instance = symbolInstanceLoop.nextObject()) {
+			var symbolInstanceOverrideValues = instance.overrides().allValues();
+
+			for (var i = 0; i < symbolInstanceOverrideValues.count(); i++) {
+				if (overrideKey in symbolInstanceOverrideValues[i]) {
+					var instanceOverrideValue = symbolInstanceOverrideValues[i].valueForKey(overrideKey);
+
+					if (instanceOverrideValue != "" && instanceOverrideValue != null) {
+						exemptSymbols.push(String(instanceOverrideValue));
+					}
+				}
+			}
+		}
+	}
+
+	var exemptSymbols = exemptSymbols.filter(function(item,pos) {
+		return exemptSymbols.indexOf(item) == pos;
+	});
+
+	return exemptSymbols;
 }

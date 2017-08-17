@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **12.3** - Added back symbol override protections, as it seems the isSafeToDelete function of MSSymbolMaster has a bug with nested nested symbols. Also fixed a feedback bug, for when Remove Unused Symbols would correctly leave no symbols remaining on the symbols page (would incorrectly state "There are no symbols to organize on this page").
 * **12.2** - Fixed (another) issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
 * **12.1** - Fixed issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
 * **12.0** - Improved the Remove Unused Symbols function, it should now be very accurate as it uses the native isSafeToDelete function of MSSymbolMaster. Improved the process for which symbols and the layer list are moved around, no longer removing and re-adding (to avoid another Sketch 45 fiasco) and instead simply moving. Merged the distinct files for Config and Run into a single file. Updated plugin identifier while also preserving user’s previous settings. Made many other housekeeping optimizations.

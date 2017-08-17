@@ -261,7 +261,12 @@ var config = function(context) {
 						doc.showMessage(strSymbolLayoutComplete);
 					}
 				} else {
-					displayDialog(strNoSymbolsOnPage,pluginName);
+					// Feedback to user
+					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
+						doc.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
+					} else {
+						displayDialog(strNoSymbolsOnPage,pluginName);
+					}
 				}
 			}
 			// If layout settings were not retrieved...
@@ -518,8 +523,17 @@ var run = function(context) {
 						doc.showMessage(strSymbolLayoutComplete);
 					}
 				} else {
-					displayDialog(strNoSymbolsOnPage,pluginName);
+					// Feedback to user
+					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
+						doc.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
+					} else {
+						displayDialog(strNoSymbolsOnPage,pluginName);
+					}
 				}
+			}
+			// If layout settings were not retrieved...
+			else {
+				// Don't do anything as the user likely canceled
 			}
 		} else {
 			displayDialog(strPageContainsArtboards,pluginName);
