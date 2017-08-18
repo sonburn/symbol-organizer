@@ -6,15 +6,15 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 12.3</title>
+			<title>Version 12.4</title>
 			<description>
 				<![CDATA[
 				<ul>
-				<li>Added back symbol override protections, as it seems the isSafeToDelete function of MSSymbolMaster has a bug with nested nested symbols. Also fixed a feedback bug, for when Remove Unused Symbols would correctly leave no symbols remaining on the symbols page (would incorrectly state "There are no symbols to organize on this page").</li>
+				<li>Fix for titles becoming misaligned when Layout Direction is set to vertical and Symbol Organizer is used in Run mode.</li>
 				</ul>
 				]]>
 			</description>
-			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="12.3" />
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="12.4" />
 		</item>
 	</channel>
 </rss>

@@ -350,7 +350,7 @@ var run = function(context) {
 					// If user wants to display group titles...
 					if (layoutSettings.displayTitles == 1) {
 						// Title style variables
-						var titleTextAlign = (layoutSettings.sortDirection == 0) ? 0 : 1;
+						if (layoutSettings.sortDirection == 1) titleStyleFont.textAlignment = 1;
 						var offsetHeight = titleStyleFont.lineHeight;
 
 						// Check for title style
