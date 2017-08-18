@@ -53,7 +53,7 @@ To find your plugins directory...
 
 # Contact
 
-https://twitter.com/sonburn
+<a class="twitter-follow-button" href="https://twitter.com/sonburn">Follow @sonburn</a>
 
 # Support
 
