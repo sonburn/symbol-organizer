@@ -227,6 +227,9 @@ function createGroupObject(symbols,depth) {
 		// Set a prefix for current group
 		var thisGroupPrefix = (breakPoint > 0) ? symbolName.slice(0,breakPoint) : symbolName;
 
+		// Trim leading/trailing white space from prefix
+		thisGroupPrefix = thisGroupPrefix.trim();
+
 		// If this group prefix is not the same as last group
 		if (lastGroupPrefix != thisGroupPrefix) {
 			// Increment the group counter
