@@ -69,7 +69,8 @@ var symbolOrganizer = function(context,type) {
 				// If the document still has symbols...
 				if (page.symbols().count() != 0) {
 					// Create a symbols object, of either all symbols or just Symbols page symbols
-					var symbols = (layoutSettings.gatherSymbols == 1) ? doc.documentData().allSymbols() : page.symbols();
+					var symbolLocation = (MSApplicationMetadata.metadata().appVersion > 46) ? doc.documentData().localSymbols() : doc.documentData().allSymbols();
+					var symbols = (layoutSettings.gatherSymbols == 1) ? symbolLocation : page.symbols();
 
 					// Sort the symbols object by name
 					var sortByName = [NSSortDescriptor sortDescriptorWithKey:"name" ascending:1];

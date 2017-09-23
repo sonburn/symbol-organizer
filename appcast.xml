@@ -6,11 +6,11 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 12.5</title>
+			<title>Version 12.6</title>
 			<description>
 				<![CDATA[
 				<ul>
-				<li>Simplified code, and implemented enhancement to trim whitespace when generating groups (does not affect alphabetic sorting).</li>
+				<li>Fix to only gather local symbols in Sketch 47.</li>
 				</ul>
 				]]>
 			</description>
