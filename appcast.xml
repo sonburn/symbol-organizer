@@ -6,15 +6,15 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 12.6</title>
+			<title>Version 12.7</title>
 			<description>
 				<![CDATA[
 				<ul>
-				<li>Fix to only gather local symbols in Sketch 47.</li>
+				<li>Fix for duplicate groups when alphabetical sorting and multiple depths confuses group definition.</li>
 				</ul>
 				]]>
 			</description>
-			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="12.5" />
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="12.7" />
 		</item>
 	</channel>
 </rss>

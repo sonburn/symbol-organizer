@@ -69,8 +69,7 @@ var symbolOrganizer = function(context,type) {
 				// If the document still has symbols...
 				if (page.symbols().count() != 0) {
 					// Create a symbols object, of either all symbols or just Symbols page symbols
-					var symbolLocation = (MSApplicationMetadata.metadata().appVersion > 46) ? doc.documentData().localSymbols() : doc.documentData().allSymbols();
-					var symbols = (layoutSettings.gatherSymbols == 1) ? symbolLocation : page.symbols();
+					var symbols = (layoutSettings.gatherSymbols == 1) ? (MSApplicationMetadata.metadata().appVersion > 46) ? doc.documentData().localSymbols() : doc.documentData().allSymbols() : page.symbols();
 
 					// Sort the symbols object by name
 					var sortByName = [NSSortDescriptor sortDescriptorWithKey:"name" ascending:1];
@@ -142,7 +141,7 @@ var symbolOrganizer = function(context,type) {
 					// Iterate through the group object
 					for (var i = 0; i < groupLayout.length; i++) {
 						// Symbol variables
-						var symbol = symbols.objectAtIndex(i);
+						var symbol = symbols.objectAtIndex(groupLayout[i]['index']);
 						var symbolFrame = symbol.frame();
 
 						// If user wants to display titles, and this is the first item in the first group, or a brand new group...

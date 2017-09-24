@@ -213,39 +213,57 @@ function createGroupObject(symbols,depth) {
 	// Group variables
 	var groupCount = 0;
 	var groupLayout = [];
-	var lastGroupPrefix;
 
 	// Iterate through the symbols
 	for (var i = 0; i < symbols.count(); i++) {
 		// Symbol variables
-		var symbol = symbols.objectAtIndex(i);
-		var symbolName = symbol.name();
+		var symbol = symbols.objectAtIndex(i),
+			symbolName = symbol.name(),
+			symbolGroup = 0,
+			breakPoint,
+			groupPrefix;
 
 		// Determine a break point in the symbol name
-		var breakPoint = (symbolName.indexOf("/") != -1) ? getCharPosition(symbolName,"/",depth+1) : 0;
+		breakPoint = (symbolName.indexOf("/") != -1) ? getCharPosition(symbolName,"/",depth+1) : 0;
 
 		// Set a prefix for current group
-		var thisGroupPrefix = (breakPoint > 0) ? symbolName.slice(0,breakPoint) : symbolName;
+		groupPrefix = (breakPoint > 0) ? symbolName.slice(0,breakPoint) : symbolName;
 
 		// Trim leading/trailing white space from prefix
-		thisGroupPrefix = thisGroupPrefix.trim();
+		groupPrefix = groupPrefix.trim();
 
-		// If this group prefix is not the same as last group
-		if (lastGroupPrefix != thisGroupPrefix) {
-			// Increment the group counter
+		// Iterate through groupLayout to look for prefix matches...
+		for (key in groupLayout) {
+			// If no symbol group has been set yet...
+			if (symbolGroup == 0) {
+				// Set symbol group if a match was found
+				if (groupLayout[key]['prefix'] == groupPrefix) symbolGroup = groupLayout[key]['group'];
+			}
+		}
+
+		// If still no symbol group...
+		if (symbolGroup == 0) {
+			// Iterate the groupCount
 			groupCount++;
+
+			// Set the symbol group to the new group number
+			symbolGroup = groupCount;
 		}
 
 		// Add an entry to the group object
 		groupLayout.push({
-			prefix: thisGroupPrefix,
-			group: groupCount
+			prefix: groupPrefix,
+			group: symbolGroup,
+			index: i
 		});
-
-		// Set the last group prefix to current prefix
-		lastGroupPrefix = thisGroupPrefix;
 	}
 
+	// Sort groupLayout by group number
+	groupLayout.sort(function(a,b) {
+		return a.group - b.group;
+	});
+
+	// Return the groupLayout object
 	return groupLayout;
 }
 
