@@ -296,26 +296,40 @@ function removeUnusedSymbols(context,pluginDomain) {
 }
 
 function getExemptSymbols(context,pluginDomain) {
-	var exemptSymbols = [];
-	var overrideKey = 'symbolID';
+	var exemptSymbols = [],
+		overrideKey = "symbolID";
 
-	var pages = context.document.pages();
-	var pageLoop = pages.objectEnumerator(), page;
+	var pages = context.document.pages(),
+		pageLoop = pages.objectEnumerator(),
+		page;
 
 	while (page = pageLoop.nextObject()) {
-		var symbolInstancesWithOverrides = page.children().filteredArrayUsingPredicate(NSPredicate.predicateWithFormat("className == %@ && overrides != nil","MSSymbolInstance",pluginDomain));
+		var predicate = NSPredicate.predicateWithFormat("className == %@ && overrides != nil","MSSymbolInstance",pluginDomain),
+			instancesWithOverrides = page.children().filteredArrayUsingPredicate(predicate),
+			loop = instancesWithOverrides.objectEnumerator(),
+			instance;
 
-		var symbolInstanceLoop = symbolInstancesWithOverrides.objectEnumerator(), instance;
-
-		while (instance = symbolInstanceLoop.nextObject()) {
+		while (instance = loop.nextObject()) {
 			var symbolInstanceOverrideValues = instance.overrides().allValues();
 
 			for (var i = 0; i < symbolInstanceOverrideValues.count(); i++) {
-				if (overrideKey in symbolInstanceOverrideValues[i]) {
-					var instanceOverrideValue = symbolInstanceOverrideValues[i].valueForKey(overrideKey);
+				var thisObject = symbolInstanceOverrideValues[i];
 
-					if (instanceOverrideValue != "" && instanceOverrideValue != null) {
-						exemptSymbols.push(String(instanceOverrideValue));
+				for (var key in thisObject) {
+					if (thisObject[overrideKey]) {
+						var instanceOverrideValue = thisObject.valueForKey(overrideKey);
+
+						if (instanceOverrideValue != "" && instanceOverrideValue != null) {
+							exemptSymbols.push(String(instanceOverrideValue));
+						}
+					}
+
+					if (typeof(thisObject[key] == "object")) {
+						var instanceOverrideValue = thisObject[key][overrideKey];
+
+						if (instanceOverrideValue != "" && instanceOverrideValue != null) {
+							exemptSymbols.push(String(instanceOverrideValue));
+						}
 					}
 				}
 			}
