@@ -17,7 +17,8 @@ var strProblemSavingSettings = "Unable to save settings";
 // Style variables
 var titleStyleName = "Symbol Organizer/Group Title";
 var titleStyleFont = {
-	fontFace : "SF UI Text Bold",
+	fontFamily : ["SFProText-Bold","SFUIText-Bold","HelveticaNeue-Bold"],
+	fontFace : "SFProText-Bold",
 	fontSize : 20,
 	lineHeight : 24,
 	textAlignment : 0
@@ -103,20 +104,37 @@ var symbolOrganizer = function(context,type) {
 
 						// If title style does not exist...
 						if (!titleStyle) {
+							// System font variable
+							var systemFontToUse;
+
+							// Iterate through family fonts...
+							for (var i = 0; i < titleStyleFont.fontFamily.length; i++) {
+								// If a system font has not been determined to exist yet...
+								if (!systemFontToUse) {
+									// If this system font exists, set system font variable
+									if (systemFontExists(titleStyleFont.fontFamily[i])) systemFontToUse = titleStyleFont.fontFamily[i];
+								}
+							}
+
+							// Update the titleStyleFont object's font face to an existing system font
+							titleStyleFont.fontFace = systemFontToUse;
+
 							// Add title style
 							titleStyle = addTextStyle(context,titleStyleName,createTextStyle(titleStyleFont));
 						} else {
 							// Respect potential for user modified style
-							var tempLayer = MSTextLayer.new();
-							tempLayer.setStringValue('Temp');
-							tempLayer.setName('Temp');
-							tempLayer.setStyle(titleStyle.newInstance());
+							titleStyleFont.fontFace = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
+							titleStyleFont.fontSize = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
+							titleStyleFont.lineHeight = titleStyle.style().textStyle().attributes().NSParagraphStyle.minimumLineHeight();
 
-							titleStyleFont.fontFace = tempLayer.fontPostscriptName();
-							titleStyleFont.fontSize = tempLayer.fontSize();
-							titleStyleFont.lineHeight = tempLayer.lineHeight();
-
+							// If lineHeight (and thus offset) is 0...
 							if (titleStyleFont.lineHeight == 0) {
+								// Apply style to a temporary layer
+								var tempLayer = MSTextLayer.new();
+								tempLayer.setStringValue('Temp');
+								tempLayer.setStyle(titleStyle.newInstance());
+
+								// Get temporary layer height and use as offset
 								offsetHeight = tempLayer.frame().height();
 							}
 
@@ -314,77 +332,87 @@ function getLayoutSettings(context,type) {
 
 	// If type is set and equal to "config", operate in config mode...
 	if (type && type == "config") {
-		// Establish the alert window
+		// Layout variables
+		var groupPadding = 16;
+
+		// Create the alert window
 		var alertWindow = COSAlertWindow.new();
+
 		alertWindow.setIcon(NSImage.alloc().initByReferencingFile(context.plugin.urlForResourceNamed("icon.png").path()));
 		alertWindow.setMessageText(pluginName);
 
 		// Grouping options
-		var groupFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,124));
-		alertWindow.addAccessoryView(groupFrame);
+		var groupFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,118+groupPadding));
+		groupFrame.setFlipped(true);
 
-		var groupGranularityLabel = createLabel('Group Definition',12,NSMakeRect(0,108,140,16));
+		var groupGranularityLabel = createLabel('Group Definition',12,NSMakeRect(0,0,140,16));
 		groupFrame.addSubview(groupGranularityLabel);
 
-		var groupGranularityDescription = createDescription('Symbol Organizer uses a "/" in the name of\neach symbol to determine the grouping. This\nsetting specifies which "/" should be used.',11,NSMakeRect(0,62,300,42));
+		var groupGranularityDescription = createDescription('Symbol Organizer uses a "/" in the name of each symbol to determine the grouping. This setting specifies which "/" should be used.',11,NSMakeRect(0,20,300,42));
 		groupFrame.addSubview(groupGranularityDescription);
 
-		var groupGranularityValue = createSelect(['1st','2nd','3rd','4th','5th','6th','7th','8th'],defaultSettings.groupDepth,NSMakeRect(0,26,60,28));
+		var groupGranularityValue = createSelect(['1st','2nd','3rd','4th','5th','6th','7th','8th'],defaultSettings.groupDepth,NSMakeRect(0,70,60,28));
 		groupFrame.addSubview(groupGranularityValue);
 
-		var groupTitlesCheckbox = createCheckbox({name:"Display group titles",value:1},defaultSettings.displayTitles,NSMakeRect(0,0,300,18));
+		var groupTitlesCheckbox = createCheckbox({name:"Display group titles",value:1},defaultSettings.displayTitles,NSMakeRect(0,108,300,14));
 		groupFrame.addSubview(groupTitlesCheckbox);
 
-		// Layout options
-		var layoutFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,239));
-		alertWindow.addAccessoryView(layoutFrame);
+		alertWindow.addAccessoryView(groupFrame);
 
-		var layoutDirectionLabel = createLabel('Layout Direction',12,NSMakeRect(0,208,140,16));
+		// Layout options
+		var layoutFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,214+groupPadding));
+		layoutFrame.setFlipped(true);
+
+		var layoutDirectionLabel = createLabel('Layout Direction',12,NSMakeRect(0,0,140,16));
 		layoutFrame.addSubview(layoutDirectionLabel);
 
-		var layoutDirectionValue = createRadioButtons(['Horizontal','Vertical'],defaultSettings.sortDirection,0,0,153);
+		var layoutDirectionValue = createRadioButtons(['Horizontal','Vertical'],defaultSettings.sortDirection,0,0,24);
 		layoutFrame.addSubview(layoutDirectionValue);
 
-		var layoutHorizontalLabel = createLabel('Horizontal Space',12,NSMakeRect(0,137,140,16));
+		var layoutHorizontalLabel = createLabel('Horizontal Space',12,NSMakeRect(0,72,140,16));
 		layoutFrame.addSubview(layoutHorizontalLabel);
 
-		var layoutHorizontalValue = createField(defaultSettings.xPad,NSMakeRect(0,110,60,22));
+		var layoutHorizontalValue = createField(defaultSettings.xPad,NSMakeRect(0,92,60,22));
 		layoutFrame.addSubview(layoutHorizontalValue);
 
-		var layoutVerticalLabel = createLabel('Vertical Space',12,NSMakeRect(0,82,140,16));
+		var layoutVerticalLabel = createLabel('Vertical Space',12,NSMakeRect(0,122,140,16));
 		layoutFrame.addSubview(layoutVerticalLabel);
 
-		var layoutVerticalValue = createField(defaultSettings.yPad,NSMakeRect(0,55,60,22));
+		var layoutVerticalValue = createField(defaultSettings.yPad,NSMakeRect(0,142,60,22));
 		layoutFrame.addSubview(layoutVerticalValue);
 
-		var layoutMaxLabel = createLabel('Max Per Row/Column',12,NSMakeRect(0,27,140,16));
+		var layoutMaxLabel = createLabel('Max Per Row/Column',12,NSMakeRect(0,172,140,16));
 		layoutFrame.addSubview(layoutMaxLabel);
 
-		var layoutMaxValue = createField(defaultSettings.maxPer,NSMakeRect(0,0,60,22));
+		var layoutMaxValue = createField(defaultSettings.maxPer,NSMakeRect(0,192,60,22));
 		layoutFrame.addSubview(layoutMaxValue);
 
-		// Other options
-		var otherFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,161));
-		alertWindow.addAccessoryView(otherFrame);
+		alertWindow.addAccessoryView(layoutFrame);
 
-		var reverseOrderCheckbox = createCheckbox({name:"Reverse layer list sort order",value:1},defaultSettings.reverseOrder,NSMakeRect(0,126,300,18));
+		// Other options
+		var otherFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,300,138));
+		otherFrame.setFlipped(true);
+
+		var reverseOrderCheckbox = createCheckbox({name:"Reverse layer list sort order",value:1},defaultSettings.reverseOrder,NSMakeRect(0,0,300,14));
 		otherFrame.addSubview(reverseOrderCheckbox);
 
-		var renameSymbolsCheckbox = createCheckbox({name:"Sequentially number duplicate symbols",value:1},defaultSettings.renameSymbols,NSMakeRect(0,98,300,18));
+		var renameSymbolsCheckbox = createCheckbox({name:"Sequentially number duplicate symbols",value:1},defaultSettings.renameSymbols,NSMakeRect(0,26,300,14));
 		otherFrame.addSubview(renameSymbolsCheckbox);
 
-		var gatherSymbolsCheckbox = createCheckbox({name:"Gather symbols from other pages",value:1},defaultSettings.gatherSymbols,NSMakeRect(0,70,300,18));
+		var gatherSymbolsCheckbox = createCheckbox({name:"Gather symbols from other pages",value:1},defaultSettings.gatherSymbols,NSMakeRect(0,52,300,14));
 		otherFrame.addSubview(gatherSymbolsCheckbox);
 
-		var removeSymbolsCheckbox = createCheckbox({name:"Remove unused symbols",value:1},defaultSettings.removeSymbols,NSMakeRect(0,42,300,18));
+		var removeSymbolsCheckbox = createCheckbox({name:"Remove unused symbols on page",value:1},defaultSettings.removeSymbols,NSMakeRect(0,78,300,14));
 		otherFrame.addSubview(removeSymbolsCheckbox);
 
-		var removeSymbolsDescription = createDescription('Presents a checklist of unused symbols for your\nconfirmation. Symbols which are nested in other\nsymbols, or used as overrides, will be ignored.',11,NSMakeRect(18,0,282,42));
+		var removeSymbolsDescription = createDescription('Presents a checklist of unused symbols for your confirmation. Symbols which are nested in other symbols, or used as overrides, will be ignored.',11,NSMakeRect(18,96,282,42));
 		otherFrame.addSubview(removeSymbolsDescription);
 
+		alertWindow.addAccessoryView(otherFrame);
+
 		// Buttons
-		alertWindow.addButtonWithTitle('OK');
-		alertWindow.addButtonWithTitle('Cancel');
+		alertWindow.addButtonWithTitle("OK");
+		alertWindow.addButtonWithTitle("Cancel");
 
 		// Set key order and first responder
 		setKeyOrder(alertWindow,[

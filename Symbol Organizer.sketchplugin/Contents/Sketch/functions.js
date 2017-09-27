@@ -282,8 +282,8 @@ function removeUnusedSymbols(context,pluginDomain) {
 		listItemHeight = 24,
 		count = 0;
 
-	var predicate = NSPredicate.predicateWithFormat("isSafeToDelete == 1",pluginDomain),
-		symbols = context.document.documentData().allSymbols().filteredArrayUsingPredicate(predicate),
+	var predicate = NSPredicate.predicateWithFormat("className == %@ && isSafeToDelete == 1","MSSymbolMaster",pluginDomain),
+		symbols = context.document.currentPage().children().filteredArrayUsingPredicate(predicate),
 		loop = symbols.objectEnumerator(),
 		symbol;
 
@@ -386,4 +386,17 @@ function getExemptSymbols(context,pluginDomain) {
 	});
 
 	return exemptSymbols;
+}
+
+function systemFontExists(fontName) {
+	var systemFonts = NSFontManager.sharedFontManager().availableFonts(),
+		loop = systemFonts.objectEnumerator(),
+		font,
+		fontExists = false;
+
+	while (font = loop.nextObject()) {
+		if (font == fontName) fontExists = true;
+	}
+
+	return fontExists;
 }
