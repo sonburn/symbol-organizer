@@ -379,7 +379,7 @@ function getLayoutSettings(context,type) {
 		var removeSymbolsCheckbox = createCheckbox({name:"Remove unused symbols",value:1},defaultSettings.removeSymbols,NSMakeRect(0,42,300,18));
 		otherFrame.addSubview(removeSymbolsCheckbox);
 
-		var removeSymbolsDescription = createDescription('Removes unused symbols in your document.\nSymbols which are nested in other symbols, or\nused as overrides, will NOT be removed.',11,NSMakeRect(18,0,282,42));
+		var removeSymbolsDescription = createDescription('Presents a checklist of unused symbols for your\nconfirmation. Symbols which are nested in other\nsymbols, or used as overrides, will be ignored.',11,NSMakeRect(18,0,282,42));
 		otherFrame.addSubview(removeSymbolsDescription);
 
 		// Buttons

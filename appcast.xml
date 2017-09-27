@@ -6,15 +6,15 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 12.8</title>
+			<title>Version 13.0</title>
 			<description>
 				<![CDATA[
 				<ul>
-				<li>Another attempt to ensure all/only unused symbols are removed.</li>
+				<li>Remove Unused Symbols will now present checklist of removal candidates, requiring the user to review and confirm.</li>
 				</ul>
 				]]>
 			</description>
-			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="12.8" />
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="13.0" />
 		</item>
 	</channel>
 </rss>

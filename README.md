@@ -40,6 +40,12 @@ To find your plugins directory...
 
 # Changelog
 
+* **13.0** - Remove Unused Symbols will now present checklist of removal candidates, requiring the user to review and confirm.
+* **12.8** - Another attempt to ensure all/only unused symbols are removed.
+* **12.7** - Fix for duplicate groups when alphabetical sorting and multiple depths confuses group definition.
+* **12.6** - Fix to only gather local symbols in Sketch 47.
+* **12.5** - Simplified code, and implemented enhancement to trim whitespace when generating groups (does not affect alphabetic sorting).
+* **12.4** - Fix for titles becoming misaligned when Layout Direction is set to vertical and Symbol Organizer is used in Run mode.
 * **12.3** - Added back symbol override protections, as it seems the isSafeToDelete function of MSSymbolMaster has a bug with nested nested symbols. Also fixed a feedback bug, for when Remove Unused Symbols would correctly leave no symbols remaining on the symbols page (would incorrectly state "There are no symbols to organize on this page").
 * **12.2** - Fixed (another) issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
 * **12.1** - Fixed issue for when Symbol Organizer is being used on a brand new document, which has no stored settings of any kind (was referring to stored settings to migrate old Symbol Organizer settings to new plugin identifier).
