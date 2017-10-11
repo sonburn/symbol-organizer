@@ -35,92 +35,102 @@ function createTextStyle(styleData) {
 }
 
 function createSelect(items,selectedItemIndex,frame) {
-	selectedItemIndex = (selectedItemIndex > -1) ? selectedItemIndex : 0;
-	var comboBox = [[NSComboBox alloc] initWithFrame:frame];
-	[comboBox addItemsWithObjectValues:items];
-	[comboBox selectItemAtIndex:selectedItemIndex];
+	var comboBox = NSComboBox.alloc().initWithFrame(frame),
+		selectedItemIndex = (selectedItemIndex > -1) ? selectedItemIndex : 0;
+
+	comboBox.addItemsWithObjectValues(items);
+	comboBox.selectItemAtIndex(selectedItemIndex);
 
 	return comboBox;
 }
 
 function createRadioButtons(options,selected,format,x,y) {
-	// Set number of rows and columns
-	if (!format || format == 0) {
-		var rows = options.length;
-		var columns = 1;
-		var buttonMatrixWidth = 300;
-		var buttonCellWidth = buttonMatrixWidth;
-	} else {
-		var rows = options.length / 2;
-		var columns = 2;
-		var buttonMatrixWidth = 300;
-		var buttonCellWidth = buttonMatrixWidth / columns;
+	var rows = options.length,
+		columns = 1,
+		buttonMatrixWidth = 300,
+		buttonCellWidth = buttonMatrixWidth,
+		x = (x) ? x : 0,
+		y = (y) ? y : 0;
+
+	if (format && format != 0) {
+		rows = options.length / 2;
+		columns = 2;
+		buttonMatrixWidth = 300;
+		buttonCellWidth = buttonMatrixWidth / columns;
 	}
 
-	var x = (x) ? x : 0;
-	var y = (y) ? y : 0;
+	var buttonCell = NSButtonCell.alloc().init();
 
-	// Make a prototype cell
-	var buttonCell = [[NSButtonCell alloc] init];
-	[buttonCell setButtonType:NSRadioButton]
+	buttonCell.setButtonType(NSRadioButton);
 
-	// Make a matrix to contain the radio cells
-	var buttonMatrix = [[NSMatrix alloc] initWithFrame: NSMakeRect(x,y,buttonMatrixWidth,rows*25) mode:NSRadioModeMatrix prototype:buttonCell numberOfRows:rows numberOfColumns:columns];
-	[buttonMatrix setCellSize: NSMakeSize(buttonCellWidth,20)];
+	var buttonMatrix = NSMatrix.alloc().initWithFrame_mode_prototype_numberOfRows_numberOfColumns(
+		NSMakeRect(x,y,buttonMatrixWidth,rows*20),
+		NSRadioModeMatrix,
+		buttonCell,
+		rows,
+		columns
+	);
+
+	buttonMatrix.setCellSize(NSMakeSize(buttonCellWidth,20));
 
 	// Create a cell for each option
 	for (i = 0; i < options.length; i++) {
-		[[[buttonMatrix cells] objectAtIndex: i] setTitle: options[i]];
-		[[[buttonMatrix cells] objectAtIndex: i] setTag: i];
+		buttonMatrix.cells().objectAtIndex(i).setTitle(options[i]);
+		buttonMatrix.cells().objectAtIndex(i).setTag(i);
 	}
 
 	// Select the default cell
-	[buttonMatrix selectCellAtRow:selected column:0]
+	buttonMatrix.selectCellAtRow_column(selected,0);
 
 	// Return the matrix
 	return buttonMatrix;
 }
 
 function createField(value,frame) {
-	var field = [[NSTextField alloc] initWithFrame:frame];
-	[field setStringValue:value];
+	var field = NSTextField.alloc().initWithFrame(frame);
+
+	field.setStringValue(value);
 
 	return field;
 }
 
 function createLabel(text,size,frame) {
-	var label = [[NSTextField alloc] initWithFrame:frame];
-	[label setStringValue:text];
-	[label setFont:[NSFont boldSystemFontOfSize:size]];
-	[label setBezeled:false];
-	[label setDrawsBackground:false];
-	[label setEditable:false];
-	[label setSelectable:false];
+	var label = NSTextField.alloc().initWithFrame(frame);
+
+	label.setStringValue(text);
+	label.setFont(NSFont.boldSystemFontOfSize(size));
+	label.setBezeled(false);
+	label.setDrawsBackground(false);
+	label.setEditable(false);
+	label.setSelectable(false);
 
 	return label;
 }
 
-function createDescription(text,size,frame) {
-	var label = [[NSTextField alloc] initWithFrame:frame];
-	[label setStringValue:text];
-	[label setFont:[NSFont systemFontOfSize:size]];
-	[label setTextColor:[NSColor colorWithCalibratedRed:(0/255) green:(0/255) blue:(0/255) alpha:0.6]];
-	[label setBezeled:false];
-	[label setDrawsBackground:false];
-	[label setEditable:false];
-	[label setSelectable:false];
+function createDescription(text,size,frame,alpha) {
+	var label = NSTextField.alloc().initWithFrame(frame),
+		alpha = (alpha) ? alpha : 0.6;
+
+	label.setStringValue(text);
+	label.setFont(NSFont.systemFontOfSize(size));
+	label.setTextColor(NSColor.colorWithCalibratedRed_green_blue_alpha(0/255,0/255,0/255,alpha));
+	label.setBezeled(false);
+	label.setDrawsBackground(false);
+	label.setEditable(false);
+	label.setSelectable(false);
 
 	return label;
 }
 
 function createCheckbox(item,flag,frame) {
-	flag = ( flag == false ) ? NSOffState : NSOnState;
-	var checkbox = [[NSButton alloc] initWithFrame:frame];
-	[checkbox setButtonType: NSSwitchButton];
-	[checkbox setBezelStyle: 0];
-	[checkbox setTitle: item.name];
-	[checkbox setTag: item.value];
-	[checkbox setState: flag];
+	var checkbox = NSButton.alloc().initWithFrame(frame),
+		flag = (flag == false) ? NSOffState : NSOnState;
+
+	checkbox.setButtonType(NSSwitchButton);
+	checkbox.setBezelStyle(0);
+	checkbox.setTitle(item.name);
+	checkbox.setTag(item.value);
+	checkbox.setState(flag);
 
 	return checkbox;
 }
@@ -200,13 +210,13 @@ function renameDuplicateSymbols(symbols) {
 
 function setKeyOrder(alert,order) {
 	for (var i = 0; i < order.length; i++) {
-		var thisItem = order[i];
-		var nextItem = order[i+1];
+		var thisItem = order[i],
+			nextItem = order[i+1];
 
 		if (nextItem) thisItem.setNextKeyView(nextItem);
 	}
 
-	alert.alert().window().setInitialFirstResponder(order[0]);
+	alert.window().setInitialFirstResponder(order[0]);
 }
 
 function createGroupObject(symbols,depth) {
@@ -237,7 +247,7 @@ function createGroupObject(symbols,depth) {
 			// If no symbol group has been set yet...
 			if (symbolGroup == 0) {
 				// Set symbol group if a match was found
-				if (groupLayout[key]['prefix'] == groupPrefix) symbolGroup = groupLayout[key]['group'];
+				if (groupLayout[key]['prefix'].toLowerCase() == groupPrefix.toLowerCase()) symbolGroup = groupLayout[key]['group'];
 			}
 		}
 
@@ -295,7 +305,7 @@ function removeUnusedSymbols(context,pluginDomain) {
 	alertWindow.setIcon(NSImage.alloc().initByReferencingFile(context.plugin.urlForResourceNamed("icon.png").path()));
 	alertWindow.setMessageText("Remove Unused Symbols");
 
-	alertWindow.addTextLabelWithValue("The following symbols appear to be unused...");
+	alertWindow.setInformativeText("The following symbols appear to be unused. Symbols which are nested in other symbols, or used as overrides, were ignored.");
 
 	var symbolListInnerFrameHeight = listItemHeight * (removeSymbols.length),
 		symbolListFrame = NSScrollView.alloc().initWithFrame(NSMakeRect(0,0,300,200)),
@@ -399,4 +409,32 @@ function systemFontExists(fontName) {
 	}
 
 	return fontExists;
+}
+
+function createDivider(frame) {
+	var divider = NSView.alloc().initWithFrame(frame);
+
+	divider.setWantsLayer(1);
+	divider.layer().setBackgroundColor(CGColorCreateGenericRGB(204/255,204/255,204/255,1.0));
+
+	return divider;
+}
+
+function sortSymbolsByName(a,b) {
+	var match = /([^a-zA-Z0-9])|([0-9]+)|([a-zA-Z]+)/g,
+		ax = [],
+		bx = [];
+
+		a.name().replace(match,function(_,$1,$2,$3) { ax.push([$1 || "", $2 || Infinity, $3 || "0"])});
+		b.name().replace(match,function(_,$1,$2,$3) { bx.push([$1 || "", $2 || Infinity, $3 || "0"])});
+
+		while (ax.length && bx.length) {
+			var an = ax.shift(),
+				bn = bx.shift(),
+				nn = an[0].localeCompare(bn[0]) || (an[1] - bn[1]) || an[2].localeCompare(bn[2]);
+
+			if (nn) return nn;
+		}
+
+		return ax.length - bx.length;
 }

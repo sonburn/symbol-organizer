@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **14.0** - Added new Group Space feature and improved appearance of settings window. Improved sorting and grouping; group title case will now be ignored, and group titles which are numbers will now sort properly.
 * **13.1** - Display Group Titles will now prefer to use "SFProText-Bold" by default, and if the font doesn't exist, will fall back to "SFUIText-Bold", or "HelveticaNeue-Bold". Remove Unused Symbols will now only remove symbols on current page.
 * **13.0** - Remove Unused Symbols will now present checklist of removal candidates, requiring the user to review and confirm.
 * **12.8** - Another attempt to ensure all/only unused symbols are removed.

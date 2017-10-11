@@ -3,32 +3,32 @@
 	"commands" : [
 		{
 			"name" : "Configure Symbol Organizer",
-			"shortcut": "cmd option shift o",
+			"shortcut" : "cmd option shift o",
 			"identifier" : "symbol-organizer-config",
 			"description" : "Configure and run Symbol Organizer.",
-			"script" : "symbol-organizer.js",
+			"script" : "script.cocoascript",
 			"icon" : "icon-sr.png",
 			"handler" : "config"
 		},
 		{
 			"name" : "Run Symbol Organizer",
-			"shortcut": "cmd option control o",
+			"shortcut" : "cmd option control o",
 			"identifier" : "symbol-organizer-run",
 			"description" : "Run Symbol Organizer using last settings.",
-			"script" : "symbol-organizer.js",
+			"script" : "script.cocoascript",
 			"icon" : "icon-sr.png",
 			"handler" : "run"
 		}
 	],
 	"menu" : {
-		"title": "Symbol Organizer",
-		"items": [
+		"title" : "Symbol Organizer",
+		"items" : [
 			"symbol-organizer-config",
 			"symbol-organizer-run"
 		]
 	},
 	"identifier" : "com.sonburn.sketchplugins.symbol-organizer",
-	"version" : "13.1",
+	"version" : "14.0",
 	"description" : "Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.",
 	"authorEmail" : "jason.burns@synchronoss.com",
 	"name" : "Symbol Organizer",
