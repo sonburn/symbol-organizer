@@ -66,3 +66,7 @@ To find your plugins directory...
 # Support
 
 If you find this plugin helpful, consider shouting me ☕️ via <a href="https://www.paypal.me/sonburn">PayPal</a>.
+
+# License
+
+Copyright (c) 2017 Jason Burns (Sonburn). See LICENSE.md for further details.
