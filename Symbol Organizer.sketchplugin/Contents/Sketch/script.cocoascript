@@ -283,6 +283,9 @@ var symbolOrganizer = function(context,type) {
 					// Collapse symbols
 					actionWithType(context,"MSCollapseAllGroupsAction").doPerformAction(nil);
 
+					// Adjust view
+					context.document.currentView().zoomToFitRect(page.contentBounds());
+
 					// Feedback to user
 					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
 						doc.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
