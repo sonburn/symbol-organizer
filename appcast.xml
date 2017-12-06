@@ -6,15 +6,15 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 14.1</title>
+			<title>Version 14.2</title>
 			<description>
 				<![CDATA[
 				<ul>
-				<li>Update to adjust the view after Symbol Organizer has been run.</li>
+				<li>Fix for Sketch 48 change of currentView to contentDrawView.</li>
 				</ul>
 				]]>
 			</description>
-			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="14.1" />
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="14.2" />
 		</item>
 	</channel>
 </rss>

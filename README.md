@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **14.2** - Fix for Sketch 48 change of currentView to contentDrawView.
 * **14.1** - Update to adjust the view after Symbol Organizer has been run.
 * **14.0** - Added new Group Space feature and improved appearance of settings window. Improved sorting and grouping; group title case will now be ignored, and group titles which are numbers will now sort properly.
 * **13.1** - Display Group Titles will now prefer to use "SFProText-Bold" by default, and if the font doesn't exist, will fall back to "SFUIText-Bold", or "HelveticaNeue-Bold". Remove Unused Symbols will now only remove symbols on current page.
