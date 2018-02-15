@@ -361,26 +361,30 @@ function getExemptSymbols(context,pluginDomain) {
 	while (page = pageLoop.nextObject()) {
 		var predicate = NSPredicate.predicateWithFormat("className == %@ && overrides != nil","MSSymbolInstance",pluginDomain),
 			instancesWithOverrides = page.children().filteredArrayUsingPredicate(predicate),
-			instanceLoop = instancesWithOverrides.objectEnumerator(),
+			loop = instancesWithOverrides.objectEnumerator(),
 			instance;
 
-		while (instance = instanceLoop.nextObject()) {
-			var overrides = instance.overrides().allValues().firstObject();
+		while (instance = loop.nextObject()) {
+			var symbolInstanceOverrideValues = instance.overrides().allValues();
 
-			for (var key in overrides) {
-				var overrideValue = overrides.valueForKey(key);
+			for (var i = 0; i < symbolInstanceOverrideValues.count(); i++) {
+				var thisObject = symbolInstanceOverrideValues[i];
 
-				if (key == overrideKey) {
-					if (overrideValue != "" && overrideValue != null) {
-						exemptSymbols.push(String(overrideValue));
+				for (var key in thisObject) {
+					if (thisObject[overrideKey]) {
+						var instanceOverrideValue = thisObject.valueForKey(overrideKey);
+
+						if (instanceOverrideValue != "" && instanceOverrideValue != null) {
+							exemptSymbols.push(String(instanceOverrideValue));
+						}
 					}
-				}
 
-				if (overrideValue.class() == '__NSDictionaryM') {
-					var nestedOverrideValue = overrides[key][overrideKey];
+					if (typeof(thisObject[key] == "object")) {
+						var instanceOverrideValue = thisObject[key][overrideKey];
 
-					if (nestedOverrideValue != "" && nestedOverrideValue != null) {
-						exemptSymbols.push(String(nestedOverrideValue));
+						if (instanceOverrideValue != "" && instanceOverrideValue != null) {
+							exemptSymbols.push(String(instanceOverrideValue));
+						}
 					}
 				}
 			}

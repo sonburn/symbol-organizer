@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **14.4** - Rolling back to previous code for Remove Unused Symbols, due to feedback that it's not working as desired.
 * **14.3** - Enhancement to Remove Unused Symbols, specifically to do a better job of detecting nested overrides for nested symbols.
 * **14.2** - Fix for Sketch 48 change of currentView to contentDrawView.
 * **14.1** - Update to adjust the view after Symbol Organizer has been run.
