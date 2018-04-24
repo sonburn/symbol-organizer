@@ -18,17 +18,32 @@
 			"script" : "script.cocoascript",
 			"icon" : "icon-sr.png",
 			"handler" : "run"
+		},
+		{
+			"name": "Report Issue",
+			"identifier": "report",
+			"script" : "script.cocoascript",
+			"handler": "report"
+		},
+		{
+			"name": "Donate",
+			"identifier": "donate",
+			"script" : "script.cocoascript",
+			"handler": "donate"
 		}
 	],
 	"menu" : {
 		"title" : "Symbol Organizer",
 		"items" : [
 			"symbol-organizer-config",
-			"symbol-organizer-run"
+			"symbol-organizer-run",
+			"-",
+			"report",
+			"donate"
 		]
 	},
 	"identifier" : "com.sonburn.sketchplugins.symbol-organizer",
-	"version" : "14.4",
+	"version" : "14.5",
 	"description" : "Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.",
 	"authorEmail" : "jason.burns@synchronoss.com",
 	"name" : "Symbol Organizer",

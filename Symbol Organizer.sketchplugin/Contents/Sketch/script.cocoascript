@@ -5,6 +5,7 @@ var pluginName = "Symbol Organizer";
 var pluginDomain = "com.sonburn.sketchplugins.symbol-organizer";
 var oldPluginDomain = "com.example.sketch.44673736-18ee-470e-b22a-f17fbb378238";
 var titleGroupName = 'Titles';
+var debugMode = false;
 
 // Strings
 var strPageContainsArtboards = "This page contains artboards and symbols. Symbol Organizer can only be used on pages with just symbols.";
@@ -126,24 +127,28 @@ var symbolOrganizer = function(context,type) {
 							// Add title style
 							titleStyle = addTextStyle(context,titleStyleName,createTextStyle(titleStyleFont));
 						} else {
-							// Respect potential for user modified style
-							titleStyleFont.fontFace = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
-							titleStyleFont.fontSize = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
-							titleStyleFont.lineHeight = titleStyle.style().textStyle().attributes().NSParagraphStyle.minimumLineHeight();
+							if (context.document.documentData().layerTextStyles().updateValueOfSharedObject_byCopyingInstance) {
+								// Respect potential for user modified style
+								titleStyleFont.fontFace = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
+								titleStyleFont.fontSize = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
+								titleStyleFont.lineHeight = titleStyle.style().textStyle().attributes().NSParagraphStyle.minimumLineHeight();
 
-							// If lineHeight (and thus offset) is 0...
-							if (titleStyleFont.lineHeight == 0) {
-								// Apply style to a temporary layer
-								var tempLayer = MSTextLayer.new();
-								tempLayer.setStringValue('Temp');
-								tempLayer.setStyle(titleStyle.newInstance());
+								// If lineHeight (and thus offset) is 0...
+								if (titleStyleFont.lineHeight == 0) {
+									// Apply style to a temporary layer
+									var tempLayer = MSTextLayer.new();
+									tempLayer.setStringValue('Temp');
+									tempLayer.setStyle(titleStyle.newInstance());
 
-								// Get temporary layer height and use as offset
-								offsetHeight = tempLayer.frame().height();
+									// Get temporary layer height and use as offset
+									offsetHeight = tempLayer.frame().height();
+								}
+
+								// Update title style
+								titleStyle = updateTextStyle(context,titleStyleName,createTextStyle(titleStyleFont));
+							} else {
+								displayDialog("Titles might not appear as desired due to a Sketch 50 change. A solution is being researched.",pluginName);
 							}
-
-							// Update title style
-							titleStyle = updateTextStyle(context,titleStyleName,createTextStyle(titleStyleFont));
 						}
 
 						// Create new screen title group
@@ -300,6 +305,8 @@ var symbolOrganizer = function(context,type) {
 						displayDialog(strNoSymbolsOnPage,pluginName);
 					}
 				}
+
+				if (!debugMode) googleAnalytics(context,"organize",type);
 			}
 			// If layout settings were not retrieved...
 			else {
@@ -315,6 +322,18 @@ var symbolOrganizer = function(context,type) {
 	else {
 		displayDialog(strNoSymbolsOnPage,pluginName);
 	}
+};
+
+var report = function(context) {
+	openUrl("https://github.com/sonburn/symbol-organizer/issues/new");
+
+	if (!debugMode) googleAnalytics(context,"report","report");
+};
+
+var donate = function(context) {
+	openUrl("https://www.paypal.me/sonburn");
+
+	if (!debugMode) googleAnalytics(context,"donate","donate");
 };
 
 function getLayoutSettings(context,type) {
