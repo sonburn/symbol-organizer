@@ -23,8 +23,14 @@ function addTextStyle(context,styleName,theStyle) {
 }
 
 function updateTextStyle(context,styleName,theStyle) {
-	var textStyles = context.document.documentData().layerTextStyles();
-	textStyles.updateValueOfSharedObject_byCopyingInstance(getTextStyleByName(context,styleName),theStyle.style());
+	var textStyles = context.document.documentData().layerTextStyles(),
+		currentStyle = getTextStyleByName(context,styleName);
+
+	if (textStyles.updateValueOfSharedObject_byCopyingInstance) {
+		textStyles.updateValueOfSharedObject_byCopyingInstance(currentStyle,theStyle.style());
+	} else {
+		currentStyle.updateToMatch(theStyle.style());
+	}
 
 	return getTextStyleByName(context,styleName);
 }

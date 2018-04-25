@@ -1,48 +1,43 @@
 @import 'functions.js';
 
-// Configuration
-var pluginName = "Symbol Organizer";
-var pluginDomain = "com.sonburn.sketchplugins.symbol-organizer";
-var oldPluginDomain = "com.example.sketch.44673736-18ee-470e-b22a-f17fbb378238";
-var titleGroupName = 'Titles';
-var debugMode = false;
+// Config
+var pluginName = "Symbol Organizer",
+	pluginDomain = "com.sonburn.sketchplugins.symbol-organizer",
+	oldPluginDomain = "com.example.sketch.44673736-18ee-470e-b22a-f17fbb378238",
+	titleGroupName = "Titles",
+	titleStyleName = "Symbol Organizer/Group Title",
+	titleStyleFont = {
+		fontFamily : ["SFProText-Bold","SFUIText-Bold","HelveticaNeue-Bold"],
+		fontFace : "SFProText-Bold",
+		fontSize : 20,
+		lineHeight : 24,
+		textAlignment : 0
+	},
+	debugMode = false;
 
 // Strings
-var strPageContainsArtboards = "This page contains artboards and symbols. Symbol Organizer can only be used on pages with just symbols.";
-var strNoSymbolsOnPage = "There are no symbols to organize on this page.";
-var strSymbolLayoutComplete = "Symbols are now organized";
-var strSymbolLayoutCompleteWithRemoves = " unused symbol(s) removed";
-var strProblemFetchingSettings = "Unable to fetch settings";
-var strProblemSavingSettings = "Unable to save settings";
-var strAlertInformativeText = "Organize your symbols page alphabetically (including layer list) and into groups, determined by your symbol names.";
-var strGroupGranularityDesc = "Specifies the \"/\" position in each symbol name which should define the group.";
-var strSymbolMaxPerRow = "Max Per Row";
-var strSymbolMaxPerCol = "Max Per Column";
-
-// Style variables
-var titleStyleName = "Symbol Organizer/Group Title";
-var titleStyleFont = {
-	fontFamily : ["SFProText-Bold","SFUIText-Bold","HelveticaNeue-Bold"],
-	fontFace : "SFProText-Bold",
-	fontSize : 20,
-	lineHeight : 24,
-	textAlignment : 0
-}
+var strPageContainsArtboards = "This page contains artboards and symbols. Symbol Organizer can only be used on pages with just symbols.",
+	strNoSymbolsOnPage = "There are no symbols to organize on this page.",
+	strSymbolLayoutComplete = "Symbols are now organized",
+	strSymbolLayoutCompleteWithRemoves = " unused symbol(s) removed",
+	strProblemFetchingSettings = "Unable to fetch settings",
+	strProblemSavingSettings = "Unable to save settings",
+	strAlertInformativeText = "Organize your symbols page alphabetically (including layer list) and into groups, determined by your symbol names.",
+	strGroupGranularityDesc = "Specifies the \"/\" position in each symbol name which should define the group.",
+	strSymbolMaxPerRow = "Max Per Row",
+	strSymbolMaxPerCol = "Max Per Column";
 
 var config = function(context) {
-	symbolOrganizer(context,"config");
+	organize(context,"config");
 }
 
 var run = function(context) {
-	symbolOrganizer(context,"run");
+	organize(context,"run");
 }
 
-var symbolOrganizer = function(context,type) {
-	// Document variables
-	var doc = context.document;
-	var command = context.command;
-	var pages = doc.pages();
-	var page = doc.currentPage();
+var organize = function(context,type) {
+	// Current page
+	var page = context.document.currentPage();
 
 	// If the current page has symbols...
 	if (page.symbols().count() != 0) {
@@ -76,7 +71,7 @@ var symbolOrganizer = function(context,type) {
 				// If the document still has symbols...
 				if (page.symbols().count() != 0) {
 					// Create a symbols object, of either all symbols or just Symbols page symbols
-					var symbols = (layoutSettings.gatherSymbols == 1) ? (MSApplicationMetadata.metadata().appVersion > 46) ? doc.documentData().localSymbols() : doc.documentData().allSymbols() : page.symbols();
+					var symbols = (layoutSettings.gatherSymbols == 1) ? (MSApplicationMetadata.metadata().appVersion > 46) ? context.document.documentData().localSymbols() : context.document.documentData().allSymbols() : page.symbols();
 
 					// Sort the symbols object by name
 					symbols.sort(sortSymbolsByName);
@@ -127,28 +122,24 @@ var symbolOrganizer = function(context,type) {
 							// Add title style
 							titleStyle = addTextStyle(context,titleStyleName,createTextStyle(titleStyleFont));
 						} else {
-							if (context.document.documentData().layerTextStyles().updateValueOfSharedObject_byCopyingInstance) {
-								// Respect potential for user modified style
-								titleStyleFont.fontFace = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
-								titleStyleFont.fontSize = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
-								titleStyleFont.lineHeight = titleStyle.style().textStyle().attributes().NSParagraphStyle.minimumLineHeight();
+							// Respect potential for user modified style
+							titleStyleFont.fontFace = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
+							titleStyleFont.fontSize = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
+							titleStyleFont.lineHeight = titleStyle.style().textStyle().attributes().NSParagraphStyle.minimumLineHeight();
 
-								// If lineHeight (and thus offset) is 0...
-								if (titleStyleFont.lineHeight == 0) {
-									// Apply style to a temporary layer
-									var tempLayer = MSTextLayer.new();
-									tempLayer.setStringValue('Temp');
-									tempLayer.setStyle(titleStyle.newInstance());
+							// If lineHeight (and thus offset) is 0...
+							if (titleStyleFont.lineHeight == 0) {
+								// Apply style to a temporary layer
+								var tempLayer = MSTextLayer.new();
+								tempLayer.setStringValue('Temp');
+								tempLayer.setStyle(titleStyle.newInstance());
 
-									// Get temporary layer height and use as offset
-									offsetHeight = tempLayer.frame().height();
-								}
-
-								// Update title style
-								titleStyle = updateTextStyle(context,titleStyleName,createTextStyle(titleStyleFont));
-							} else {
-								displayDialog("Titles might not appear as desired due to a Sketch 50 change. A solution is being researched.",pluginName);
+								// Get temporary layer height and use as offset
+								offsetHeight = tempLayer.frame().height();
 							}
+
+							// Update title style
+							titleStyle = updateTextStyle(context,titleStyleName,createTextStyle(titleStyleFont));
 						}
 
 						// Create new screen title group
@@ -293,14 +284,14 @@ var symbolOrganizer = function(context,type) {
 
 					// Feedback to user
 					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
-						doc.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
+						context.document.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
 					} else {
-						doc.showMessage(strSymbolLayoutComplete);
+						context.document.showMessage(strSymbolLayoutComplete);
 					}
 				} else {
 					// Feedback to user
 					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
-						doc.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
+						context.document.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
 					} else {
 						displayDialog(strNoSymbolsOnPage,pluginName);
 					}
@@ -378,7 +369,7 @@ function getLayoutSettings(context,type) {
 		alert.setIcon(alertIcon);
 		alert.setMessageText(pluginName);
 		alert.setInformativeText(strAlertInformativeText);
-		alert.addButtonWithTitle("Organize");
+		var organizeButton = alert.addButtonWithTitle("Organize");
 		alert.addButtonWithTitle("Cancel");
 
 		alertContent.setFlipped(true);
@@ -505,7 +496,8 @@ function getLayoutSettings(context,type) {
 			verticalSpaceValue,
 			symbolMaxPerValue,
 			renameSymbolsCheckbox,
-			removeSymbolsCheckbox
+			removeSymbolsCheckbox,
+			organizeButton
 		]);
 
 		var responseCode = alert.runModal();
