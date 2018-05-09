@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **14.7** - Added plugin icon to manifest for Sketch 50.
 * **14.6** - Another modification to account for impending changes to MSSharedObjectContainer in Sketch 50.
 * **14.5** - Some modifications to account for impending changes to MSSharedObjectContainer in Sketch 50.
 * **14.4** - Rolling back to previous code for Remove Unused Symbols, due to feedback that it's not working as desired.

@@ -1,4 +1,4 @@
-@import 'functions.js';
+@import "functions.js";
 
 // Config
 var pluginName = "Symbol Organizer",
