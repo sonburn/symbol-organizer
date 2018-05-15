@@ -16,7 +16,9 @@ function addTextStyle(context,styleName,theStyle) {
 	if (textStyles.addSharedStyleWithName_firstInstance) {
 		textStyles.addSharedStyleWithName_firstInstance(styleName,theStyle.style());
 	} else {
-		textStyles.addSharedObject(MSSharedStyle.alloc().initWithName_firstInstance(styleName,theStyle.style()));
+		var textStyle = MSSharedStyle.alloc().initWithName_firstInstance(styleName,theStyle.style());
+
+		textStyles.addSharedObject(textStyle);
 	}
 
 	return getTextStyleByName(context,styleName);

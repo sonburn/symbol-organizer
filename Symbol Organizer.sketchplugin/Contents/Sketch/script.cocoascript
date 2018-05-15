@@ -313,19 +313,25 @@ var organize = function(context,type) {
 	else {
 		displayDialog(strNoSymbolsOnPage,pluginName);
 	}
-};
+}
 
 var report = function(context) {
 	openUrl("https://github.com/sonburn/symbol-organizer/issues/new");
 
 	if (!debugMode) googleAnalytics(context,"report","report");
-};
+}
+
+var plugins = function(context) {
+	openUrl("https://sonburn.github.io/");
+
+	if (!debugMode) googleAnalytics(context,"plugins","plugins");
+}
 
 var donate = function(context) {
 	openUrl("https://www.paypal.me/sonburn");
 
 	if (!debugMode) googleAnalytics(context,"donate","donate");
-};
+}
 
 function getLayoutSettings(context,type) {
 	// Document variables

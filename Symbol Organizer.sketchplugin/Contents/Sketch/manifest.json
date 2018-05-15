@@ -26,6 +26,12 @@
 			"handler": "report"
 		},
 		{
+			"name": "Other Plugins",
+			"identifier": "plugins",
+			"script" : "script.cocoascript",
+			"handler": "plugins"
+		},
+		{
 			"name": "Donate",
 			"identifier": "donate",
 			"script" : "script.cocoascript",
@@ -39,11 +45,12 @@
 			"run",
 			"-",
 			"report",
+			"plugins",
 			"donate"
 		]
 	},
 	"identifier" : "com.sonburn.sketchplugins.symbol-organizer",
-	"version" : "14.7",
+	"version" : "14.8",
 	"description" : "Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.",
 	"authorEmail" : "jason.burns@synchronoss.com",
 	"name" : "Symbol Organizer",

@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **14.8** - Bug fix for titles not appearing when first run (due to style creation issue).
 * **14.7** - Added plugin icon to manifest for Sketch 50.
 * **14.6** - Another modification to account for impending changes to MSSharedObjectContainer in Sketch 50.
 * **14.5** - Some modifications to account for impending changes to MSSharedObjectContainer in Sketch 50.
