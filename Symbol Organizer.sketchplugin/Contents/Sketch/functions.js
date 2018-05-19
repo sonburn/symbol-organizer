@@ -53,6 +53,8 @@ function createSelect(items,selectedItemIndex,frame) {
 
 	comboBox.addItemsWithObjectValues(items);
 	comboBox.selectItemAtIndex(selectedItemIndex);
+	comboBox.setNumberOfVisibleItems(16);
+	comboBox.setCompletes(1);
 
 	return comboBox;
 }
@@ -148,9 +150,14 @@ function createCheckbox(item,flag,frame) {
 	return checkbox;
 }
 
-function displayDialog(body,title) {
-	var app = NSApplication.sharedApplication();
-	app.displayDialog_withTitle(body,title);
+function displayDialog(title,body) {
+	if (MSApplicationMetadata.metadata().appVersion >= 50) {
+		const UI = require("sketch/ui");
+
+		UI.alert(title,body);
+	} else {
+		NSApplication.sharedApplication().displayDialog_withTitle(body,title);
+	}
 }
 
 function findLayerByName(scope,name,type) {
@@ -498,4 +505,30 @@ function googleAnalytics(context,category,action,label,value) {
 		task = session.dataTaskWithURL(NSURL.URLWithString(NSString.stringWithString(url)));
 
 	task.resume();
+}
+
+function getUserDefaults(domain) {
+	return NSUserDefaults.alloc().initWithSuiteName(domain);
+}
+
+function updateSettingsWithDocument(context,settings) {
+	var page = context.document.currentPage();
+
+	for (i in settings) {
+		var value = context.command.valueForKey_onLayer(i,page);
+
+		if (value) settings[i] = value;
+	}
+
+	return settings;
+}
+
+function updateSettingsWithGlobal(defaults,settings) {
+	for (i in settings) {
+		var value = defaults.objectForKey(i);
+
+		if (value) settings[i] = value;
+	}
+
+	return settings;
 }

@@ -3,9 +3,7 @@
 // Config
 var pluginName = "Symbol Organizer",
 	pluginDomain = "com.sonburn.sketchplugins.symbol-organizer",
-	oldPluginDomain = "com.example.sketch.44673736-18ee-470e-b22a-f17fbb378238",
 	titleGroupName = "Titles",
-	titleStyleName = "Symbol Organizer/Group Title",
 	titleStyleFont = {
 		fontFamily : ["SFProText-Bold","SFUIText-Bold","HelveticaNeue-Bold"],
 		fontFace : "SFProText-Bold",
@@ -20,8 +18,6 @@ var strPageContainsArtboards = "This page contains artboards and symbols. Symbol
 	strNoSymbolsOnPage = "There are no symbols to organize on this page.",
 	strSymbolLayoutComplete = "Symbols are now organized",
 	strSymbolLayoutCompleteWithRemoves = " unused symbol(s) removed",
-	strProblemFetchingSettings = "Unable to fetch settings",
-	strProblemSavingSettings = "Unable to save settings",
 	strAlertInformativeText = "Organize your symbols page alphabetically (including layer list) and into groups, determined by your symbol names.",
 	strGroupGranularityDesc = "Specifies the \"/\" position in each symbol name which should define the group.",
 	strSymbolMaxPerRow = "Max Per Row",
@@ -100,7 +96,7 @@ var organize = function(context,type) {
 						var offsetHeight = titleStyleFont.lineHeight;
 
 						// Check for title style
-						var titleStyle = getTextStyleByName(context,titleStyleName);
+						var titleStyle = getTextStyleByName(context,layoutSettings.styleName.trim());
 
 						// If title style does not exist...
 						if (!titleStyle) {
@@ -120,7 +116,7 @@ var organize = function(context,type) {
 							titleStyleFont.fontFace = systemFontToUse;
 
 							// Add title style
-							titleStyle = addTextStyle(context,titleStyleName,createTextStyle(titleStyleFont));
+							titleStyle = addTextStyle(context,layoutSettings.styleName.trim(),createTextStyle(titleStyleFont));
 						} else {
 							// Respect potential for user modified style
 							titleStyleFont.fontFace = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
@@ -131,7 +127,7 @@ var organize = function(context,type) {
 							if (titleStyleFont.lineHeight == 0) {
 								// Apply style to a temporary layer
 								var tempLayer = MSTextLayer.new();
-								tempLayer.setStringValue('Temp');
+								tempLayer.setStringValue("Temp");
 								tempLayer.setStyle(titleStyle.newInstance());
 
 								// Get temporary layer height and use as offset
@@ -139,7 +135,7 @@ var organize = function(context,type) {
 							}
 
 							// Update title style
-							titleStyle = updateTextStyle(context,titleStyleName,createTextStyle(titleStyleFont));
+							titleStyle = updateTextStyle(context,layoutSettings.styleName.trim(),createTextStyle(titleStyleFont));
 						}
 
 						// Create new screen title group
@@ -159,11 +155,11 @@ var organize = function(context,type) {
 					// Iterate through the group object
 					for (var i = 0; i < groupLayout.length; i++) {
 						// Symbol variables
-						var symbol = symbols.objectAtIndex(groupLayout[i]['index']);
+						var symbol = symbols.objectAtIndex(groupLayout[i]["index"]);
 						var symbolFrame = symbol.frame();
 
 						// If user wants to display titles, and this is the first item in the first group, or a brand new group...
-						if (layoutSettings.displayTitles == 1 && (objectCount == 1 || groupCount != groupLayout[i]['group'])) {
+						if (layoutSettings.displayTitles == 1 && (objectCount == 1 || groupCount != groupLayout[i]["group"])) {
 							// Title position variables
 							var titleTextX = 0;
 							var titleTextY = 0;
@@ -179,8 +175,8 @@ var organize = function(context,type) {
 
 							// Create screen title
 							var screenTitle = MSTextLayer.new();
-							screenTitle.setStringValue(groupLayout[i]['prefix']);
-							screenTitle.setName(groupLayout[i]['prefix']);
+							screenTitle.setStringValue(groupLayout[i]["prefix"]);
+							screenTitle.setName(groupLayout[i]["prefix"]);
 
 							if (titleTextAlign == 0) {
 								screenTitle.frame().setY(titleTextY);
@@ -198,7 +194,7 @@ var organize = function(context,type) {
 						}
 
 						// If the current group number doesn't match the group counter
-						if (groupLayout[i]['group'] != groupCount) {
+						if (groupLayout[i]["group"] != groupCount) {
 							// Update group position variables per the layout direction
 							if (layoutSettings.sortDirection == 0) {
 								// Reset y position, set the x position of the next row
@@ -293,7 +289,7 @@ var organize = function(context,type) {
 					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
 						context.document.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
 					} else {
-						displayDialog(strNoSymbolsOnPage,pluginName);
+						displayDialog(pluginName,strNoSymbolsOnPage);
 					}
 				}
 
@@ -306,12 +302,12 @@ var organize = function(context,type) {
 		}
 		// If the current page does not only contain symbols...
 		else {
-			displayDialog(strPageContainsArtboards,pluginName);
+			displayDialog(pluginName,strPageContainsArtboards);
 		}
 	}
 	// If the current page does not have symbols...
 	else {
-		displayDialog(strNoSymbolsOnPage,pluginName);
+		displayDialog(pluginName,strNoSymbolsOnPage);
 	}
 }
 
@@ -334,25 +330,37 @@ var donate = function(context) {
 }
 
 function getLayoutSettings(context,type) {
-	// Document variables
-	var page = context.document.currentPage();
+	// Page variables
+	var page = context.document.currentPage(),
+		pageInfo = page.userInfo();
 
 	// Setting variables
 	var defaultSettings = {};
+	defaultSettings.globalSettings = 1;
 	defaultSettings.groupDepth = 1;
 	defaultSettings.sortDirection = 0;
-	defaultSettings.gPad = '200';
+	defaultSettings.gPad = "200";
 	defaultSettings.displayTitles = 0;
+	defaultSettings.styleName = "Symbol Organizer/Group Title";
 	defaultSettings.reverseOrder = 0;
 	defaultSettings.gatherSymbols = 0;
-	defaultSettings.xPad = '100';
-	defaultSettings.yPad = '100';
-	defaultSettings.maxPer = '';
+	defaultSettings.xPad = "100";
+	defaultSettings.yPad = "100";
+	defaultSettings.maxPer = "";
 	defaultSettings.renameSymbols = 0;
 	defaultSettings.removeSymbols = 0;
 
-	// Update default settings with cached settings
-	defaultSettings = getCachedSettings(context,page,defaultSettings);
+	// Get document settings
+	var documentSettings = updateSettingsWithDocument(context,defaultSettings);
+
+	// If there are document settings, but no globalSettings value...
+	if (pageInfo && pageInfo[pluginDomain] && !pageInfo[pluginDomain]["globalSettings"]) {
+		// Ensure previous document settings are shown first
+		documentSettings.globalSettings = 0;
+	}
+
+	// Determine which settings should be used
+	defaultSettings = (documentSettings.globalSettings == 0) ? documentSettings : updateSettingsWithGlobal(getUserDefaults(pluginDomain),defaultSettings);
 
 	// If type is set and equal to "config", operate in config mode...
 	if (type && type == "config") {
@@ -375,10 +383,39 @@ function getLayoutSettings(context,type) {
 		alert.setIcon(alertIcon);
 		alert.setMessageText(pluginName);
 		alert.setInformativeText(strAlertInformativeText);
-		var organizeButton = alert.addButtonWithTitle("Organize");
-		alert.addButtonWithTitle("Cancel");
 
 		alertContent.setFlipped(true);
+
+		var globalSettingsLabel = createLabel("Global Settings",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
+		alertContent.addSubview(globalSettingsLabel);
+
+		var globalSettingsValue = createCheckbox({name:"Use & modify global settings",value:1},defaultSettings.globalSettings,NSMakeRect(leftColWidth,settingY+textOffset,windowWidth-leftColWidth,switchHeight));
+		alertContent.addSubview(globalSettingsValue);
+
+		globalSettingsValue.setAction("callAction:");
+		globalSettingsValue.setCOSJSTargetFunction(function(sender) {
+			var originalSettings = (sender.state() == 0) ? updateSettingsWithDocument(context,defaultSettings) : updateSettingsWithGlobal(getUserDefaults(pluginDomain),defaultSettings);
+
+			groupGranularityValue.selectItemAtIndex(originalSettings.groupDepth);
+			groupDirectionValue.selectCellAtRow_column(originalSettings.sortDirection,0);
+			groupSpaceValue.setStringValue(originalSettings.gPad);
+			groupTitlesCheckbox.setState(originalSettings.displayTitles);
+			styleNameValue.setStringValue(originalSettings.styleName);
+			styleNameValue.setEnabled(groupTitlesCheckbox.state());
+			reverseOrderCheckbox.setState(originalSettings.reverseOrder);
+			gatherSymbolsCheckbox.setState(originalSettings.gatherSymbols);
+			horizontalSpaceValue.setStringValue(originalSettings.xPad);
+			verticalSpaceValue.setStringValue(originalSettings.yPad);
+			symbolMaxPerValue.setStringValue(originalSettings.maxPer);
+			renameSymbolsCheckbox.setState(originalSettings.renameSymbols);
+		});
+
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
+
+		var divider = createDivider(NSMakeRect(0,settingY,windowWidth,1));
+		alertContent.addSubview(divider);
+
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var groupGranularityLabel = createLabel("Group Definition",12,NSMakeRect(0,settingY+textOffset*2,leftColWidth,labelHeight));
 		alertContent.addSubview(groupGranularityLabel);
@@ -394,7 +431,7 @@ function getLayoutSettings(context,type) {
 		var groupGranularityDesc = createDescription(strGroupGranularityDesc,11,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,28));
 		alertContent.addSubview(groupGranularityDesc);
 
-		settingY = CGRectGetMaxY(groupGranularityDesc.frame()) + settingPad;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var groupDirectionLabel = createLabel("Layout Direction",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
 		alertContent.addSubview(groupDirectionLabel);
@@ -412,7 +449,7 @@ function getLayoutSettings(context,type) {
 			symbolMaxPerLabel.setStringValue(strSymbolMaxPerRow);
 		});
 
-		settingY = CGRectGetMaxY(groupDirectionValue.frame()) + settingPad;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var groupSpaceLabel = createLabel("Group Space",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
 		alertContent.addSubview(groupSpaceLabel);
@@ -420,17 +457,37 @@ function getLayoutSettings(context,type) {
 		var groupSpaceValue = createField(defaultSettings.gPad,NSMakeRect(leftColWidth,settingY,fieldWidth,fieldHeight));
 		alertContent.addSubview(groupSpaceValue);
 
-		settingY = CGRectGetMaxY(groupSpaceValue.frame()) + settingPad + textOffset;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad + textOffset;
+
+		var divider = createDivider(NSMakeRect(0,settingY,windowWidth,1));
+		alertContent.addSubview(divider);
+
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var groupTitlesCheckbox = createCheckbox({name:"Display group titles",value:1},defaultSettings.displayTitles,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,switchHeight));
 		alertContent.addSubview(groupTitlesCheckbox);
 
-		settingY = CGRectGetMaxY(groupTitlesCheckbox.frame()) + settingPad;
+		groupTitlesCheckbox.setAction("callAction:");
+		groupTitlesCheckbox.setCOSJSTargetFunction(function(sender) {
+			styleNameValue.setEnabled(sender.state());
+		});
 
-		var groupDivider = createDivider(NSMakeRect(0,settingY,windowWidth,1));
-		alertContent.addSubview(groupDivider);
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		settingY = CGRectGetMaxY(groupDivider.frame()) + settingPad;
+		var styleNameLabel = createLabel("Title Style Name",12,NSMakeRect(0,settingY+textOffset,leftColWidth,labelHeight));
+		alertContent.addSubview(styleNameLabel);
+
+		var styleNameValue = createField(defaultSettings.styleName,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,fieldHeight));
+		alertContent.addSubview(styleNameValue);
+
+		styleNameValue.setEnabled(groupTitlesCheckbox.state());
+
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
+
+		var divider = createDivider(NSMakeRect(0,settingY,windowWidth,1));
+		alertContent.addSubview(divider);
+
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var reverseOrderLabel = createLabel("Layer List",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
 		alertContent.addSubview(reverseOrderLabel);
@@ -438,17 +495,17 @@ function getLayoutSettings(context,type) {
 		var reverseOrderCheckbox = createCheckbox({name:"Reverse sort order",value:1},defaultSettings.reverseOrder,NSMakeRect(leftColWidth,settingY+textOffset,windowWidth-leftColWidth,switchHeight));
 		alertContent.addSubview(reverseOrderCheckbox);
 
-		settingY = CGRectGetMaxY(reverseOrderCheckbox.frame()) + settingPad;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var symbolDivider = createDivider(NSMakeRect(0,settingY,windowWidth,1));
-		alertContent.addSubview(symbolDivider);
+		var divider = createDivider(NSMakeRect(0,settingY,windowWidth,1));
+		alertContent.addSubview(divider);
 
-		settingY = CGRectGetMaxY(symbolDivider.frame()) + settingPad;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var gatherSymbolsCheckbox = createCheckbox({name:"Gather symbols from other pages",value:1},defaultSettings.gatherSymbols,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,switchHeight));
 		alertContent.addSubview(gatherSymbolsCheckbox);
 
-		settingY = CGRectGetMaxY(gatherSymbolsCheckbox.frame()) + settingPad;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var horizontalSpaceLabel = createLabel("Horizontal Space",12,NSMakeRect(0,settingY+textOffset,leftColWidth,labelHeight));
 		alertContent.addSubview(horizontalSpaceLabel);
@@ -456,7 +513,7 @@ function getLayoutSettings(context,type) {
 		var horizontalSpaceValue = createField(defaultSettings.xPad,NSMakeRect(leftColWidth,settingY,fieldWidth,fieldHeight));
 		alertContent.addSubview(horizontalSpaceValue);
 
-		settingY = CGRectGetMaxY(horizontalSpaceValue.frame()) + settingPad;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var verticalSpaceLabel = createLabel("Vertical Space",12,NSMakeRect(0,settingY+textOffset,leftColWidth,labelHeight));
 		alertContent.addSubview(verticalSpaceLabel);
@@ -464,7 +521,7 @@ function getLayoutSettings(context,type) {
 		var verticalSpaceValue = createField(defaultSettings.yPad,NSMakeRect(leftColWidth,settingY,fieldWidth,fieldHeight));
 		alertContent.addSubview(verticalSpaceValue);
 
-		settingY = CGRectGetMaxY(verticalSpaceValue.frame()) + settingPad;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var symbolMaxPerLabel = createLabel(maxPerLabelText,12,NSMakeRect(0,settingY + textOffset,leftColWidth,labelHeight));
 		alertContent.addSubview(symbolMaxPerLabel);
@@ -472,17 +529,17 @@ function getLayoutSettings(context,type) {
 		var symbolMaxPerValue = createField(defaultSettings.maxPer,NSMakeRect(leftColWidth,settingY,fieldWidth,fieldHeight));
 		alertContent.addSubview(symbolMaxPerValue);
 
-		settingY = CGRectGetMaxY(symbolMaxPerValue.frame()) + settingPad;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var renameSymbolsCheckbox = createCheckbox({name:"Sequentially number duplicates",value:1},defaultSettings.renameSymbols,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,switchHeight));
 		alertContent.addSubview(renameSymbolsCheckbox);
 
-		settingY = CGRectGetMaxY(renameSymbolsCheckbox.frame()) + settingPad;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
 		var removeSymbolsCheckbox = createCheckbox({name:"Remove unused symbols on page",value:1},defaultSettings.removeSymbols,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,switchHeight));
 		alertContent.addSubview(removeSymbolsCheckbox);
 
-		settingY = CGRectGetMaxY(removeSymbolsCheckbox.frame()) + textOffset;
+		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + textOffset;
 
 		var removeSymbolsDesc = createDescription("Presents a checklist for your review and confirmation.",11,NSMakeRect(leftColWidth+18,settingY,windowWidth-leftColWidth-18,28));
 		alertContent.addSubview(removeSymbolsDesc);
@@ -491,11 +548,16 @@ function getLayoutSettings(context,type) {
 
 		alert.accessoryView = alertContent;
 
+		var buttonOrganize = alert.addButtonWithTitle("Organize");
+		var buttonCancel = alert.addButtonWithTitle("Cancel");
+
 		setKeyOrder(alert,[
+			globalSettingsValue,
 			groupGranularityValue,
 			groupDirectionValue,
 			groupSpaceValue,
 			groupTitlesCheckbox,
+			styleNameValue,
 			reverseOrderCheckbox,
 			gatherSymbolsCheckbox,
 			horizontalSpaceValue,
@@ -503,56 +565,58 @@ function getLayoutSettings(context,type) {
 			symbolMaxPerValue,
 			renameSymbolsCheckbox,
 			removeSymbolsCheckbox,
-			organizeButton
+			buttonOrganize
 		]);
 
 		var responseCode = alert.runModal();
 
 		if (responseCode == 1000) {
-			try {
-				context.command.setValue_forKey_onLayer([groupGranularityValue indexOfSelectedItem],"groupDepth",page);
-				context.command.setValue_forKey_onLayer([[groupDirectionValue selectedCell] tag],"sortDirection",page);
-				context.command.setValue_forKey_onLayer([groupSpaceValue stringValue],"gPad",page);
-				context.command.setValue_forKey_onLayer([groupTitlesCheckbox state],"displayTitles",page);
-				context.command.setValue_forKey_onLayer([reverseOrderCheckbox state],"reverseOrder",page);
-				context.command.setValue_forKey_onLayer([gatherSymbolsCheckbox state],"gatherSymbols",page);
-				context.command.setValue_forKey_onLayer([horizontalSpaceValue stringValue],"xPad",page);
-				context.command.setValue_forKey_onLayer([verticalSpaceValue stringValue],"yPad",page);
-				context.command.setValue_forKey_onLayer([symbolMaxPerValue stringValue],"maxPer",page);
-				context.command.setValue_forKey_onLayer([renameSymbolsCheckbox state],"renameSymbols",page);
+			if (globalSettingsValue.state() == 1) {
+				context.command.setValue_forKey_onLayer(globalSettingsValue.state(),"globalSettings",page);
+
+				var userDefaults = getUserDefaults(pluginDomain);
+
+				userDefaults.setObject_forKey(groupGranularityValue.indexOfSelectedItem(),"groupDepth");
+				userDefaults.setObject_forKey(groupDirectionValue.selectedCell().tag(),"sortDirection");
+				userDefaults.setObject_forKey(groupSpaceValue.stringValue(),"gPad");
+				userDefaults.setObject_forKey(groupTitlesCheckbox.state(),"displayTitles");
+				userDefaults.setObject_forKey(styleNameValue.stringValue(),"styleName");
+				userDefaults.setObject_forKey(reverseOrderCheckbox.state(),"reverseOrder");
+				userDefaults.setObject_forKey(gatherSymbolsCheckbox.state(),"gatherSymbols");
+				userDefaults.setObject_forKey(horizontalSpaceValue.stringValue(),"xPad");
+				userDefaults.setObject_forKey(verticalSpaceValue.stringValue(),"yPad");
+				userDefaults.setObject_forKey(symbolMaxPerValue.stringValue(),"maxPer");
+				userDefaults.setObject_forKey(renameSymbolsCheckbox.state(),"renameSymbols");
+				userDefaults.synchronize();
+			} else {
+				context.command.setValue_forKey_onLayer(globalSettingsValue.state(),"globalSettings",page);
+				context.command.setValue_forKey_onLayer(groupGranularityValue.indexOfSelectedItem(),"groupDepth",page);
+				context.command.setValue_forKey_onLayer(groupDirectionValue.selectedCell().tag(),"sortDirection",page);
+				context.command.setValue_forKey_onLayer(groupSpaceValue.stringValue(),"gPad",page);
+				context.command.setValue_forKey_onLayer(groupTitlesCheckbox.state(),"displayTitles",page);
+				context.command.setValue_forKey_onLayer(styleNameValue.stringValue(),"styleName",page);
+				context.command.setValue_forKey_onLayer(reverseOrderCheckbox.state(),"reverseOrder",page);
+				context.command.setValue_forKey_onLayer(gatherSymbolsCheckbox.state(),"gatherSymbols",page);
+				context.command.setValue_forKey_onLayer(horizontalSpaceValue.stringValue(),"xPad",page);
+				context.command.setValue_forKey_onLayer(verticalSpaceValue.stringValue(),"yPad",page);
+				context.command.setValue_forKey_onLayer(symbolMaxPerValue.stringValue(),"maxPer",page);
+				context.command.setValue_forKey_onLayer(renameSymbolsCheckbox.state(),"renameSymbols",page);
 				context.command.setValue_forKey_onLayer(0,"removeSymbols",page);
-
-				if (page.userInfo() && page.userInfo().valueForKey(oldPluginDomain)) {
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"groupDepth",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"displayTitles",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"sortDirection",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"xPad",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"yPad",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"maxPer",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"reverseOrder",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"renameSymbols",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"gatherSymbols",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"removeSymbols",page,oldPluginDomain);
-					context.command.setValue_forKey_onLayer_forPluginIdentifier(nil,"sortOrder",page,oldPluginDomain);
-
-					log("Old settings for Symbol Organizer have been purged.")
-				}
-			} catch(err) {
-				log(strProblemSavingSettings);
 			}
 
 			return {
-				groupDepth : [groupGranularityValue indexOfSelectedItem],
-				sortDirection : [[groupDirectionValue selectedCell] tag],
-				gPad : [groupSpaceValue stringValue],
-				displayTitles : [groupTitlesCheckbox state],
-				reverseOrder : [reverseOrderCheckbox state],
-				gatherSymbols : [gatherSymbolsCheckbox state],
-				xPad : [horizontalSpaceValue stringValue],
-				yPad : [verticalSpaceValue stringValue],
-				maxPer : [symbolMaxPerValue stringValue],
-				renameSymbols : [renameSymbolsCheckbox state],
-				removeSymbols : [removeSymbolsCheckbox state]
+				groupDepth : groupGranularityValue.indexOfSelectedItem(),
+				sortDirection : groupDirectionValue.selectedCell().tag(),
+				gPad : groupSpaceValue.stringValue(),
+				displayTitles : groupTitlesCheckbox.state(),
+				styleName : styleNameValue.stringValue(),
+				reverseOrder : reverseOrderCheckbox.state(),
+				gatherSymbols : gatherSymbolsCheckbox.state(),
+				xPad : horizontalSpaceValue.stringValue(),
+				yPad : verticalSpaceValue.stringValue(),
+				maxPer : symbolMaxPerValue.stringValue(),
+				renameSymbols : renameSymbolsCheckbox.state(),
+				removeSymbols : removeSymbolsCheckbox.state()
 			}
 		} else return false;
 	}
@@ -564,6 +628,7 @@ function getLayoutSettings(context,type) {
 			sortDirection : defaultSettings.sortDirection,
 			gPad : defaultSettings.gPad,
 			displayTitles : defaultSettings.displayTitles,
+			styleName : defaultSettings.styleName,
 			reverseOrder : defaultSettings.reverseOrder,
 			gatherSymbols : defaultSettings.gatherSymbols,
 			xPad : defaultSettings.xPad,
@@ -572,20 +637,5 @@ function getLayoutSettings(context,type) {
 			renameSymbols : defaultSettings.renameSymbols,
 			removeSymbols : defaultSettings.removeSymbols
 		}
-	}
-}
-
-function getCachedSettings(context,location,settings) {
-	var usePluginDomain = (location.userInfo() && location.userInfo().valueForKey(oldPluginDomain)) ? oldPluginDomain : pluginDomain;
-
-	try {
-		for (i in settings) {
-			var value = context.command.valueForKey_onLayer_forPluginIdentifier(i,location,usePluginDomain);
-			if (value) settings[i] = value;
-		}
-
-		return settings;
-	} catch(err) {
-		log(strProblemFetchingSettings);
 	}
 }
