@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **15.1** - Fix for group title text style color modification being overwritten.
 * **15.0** - Added support for global settings, and setting group title style name.
 * **14.8** - Bug fix for titles not appearing when first run (due to style creation issue).
 * **14.7** - Added plugin icon to manifest for Sketch 50.

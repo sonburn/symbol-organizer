@@ -8,6 +8,7 @@ var pluginName = "Symbol Organizer",
 		fontFamily : ["SFProText-Bold","SFUIText-Bold","HelveticaNeue-Bold"],
 		fontFace : "SFProText-Bold",
 		fontSize : 20,
+		fontColor : "000000",
 		lineHeight : 24,
 		textAlignment : 0
 	},
@@ -121,6 +122,7 @@ var organize = function(context,type) {
 							// Respect potential for user modified style
 							titleStyleFont.fontFace = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
 							titleStyleFont.fontSize = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
+							titleStyleFont.fontColor = titleStyle.style().textStyle().attributes().MSAttributedStringColorAttribute.hexValue();
 							titleStyleFont.lineHeight = titleStyle.style().textStyle().attributes().NSParagraphStyle.minimumLineHeight();
 
 							// If lineHeight (and thus offset) is 0...
