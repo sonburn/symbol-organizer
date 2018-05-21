@@ -119,11 +119,14 @@ var organize = function(context,type) {
 							// Add title style
 							titleStyle = addTextStyle(context,layoutSettings.styleName.trim(),createTextStyle(titleStyleFont));
 						} else {
+							// Title style attributes
+							var titleStyleAttributes = titleStyle.style().textStyle().attributes();
+
 							// Respect potential for user modified style
-							titleStyleFont.fontFace = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
-							titleStyleFont.fontSize = titleStyle.style().textStyle().attributes().NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
-							titleStyleFont.fontColor = titleStyle.style().textStyle().attributes().MSAttributedStringColorAttribute.hexValue();
-							titleStyleFont.lineHeight = titleStyle.style().textStyle().attributes().NSParagraphStyle.minimumLineHeight();
+							titleStyleFont.fontFace = titleStyleAttributes.NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
+							titleStyleFont.fontSize = titleStyleAttributes.NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
+							if (titleStyleAttributes.MSAttributedStringColorAttribute && titleStyleAttributes.MSAttributedStringColorAttribute.hexValue()) titleStyleFont.fontColor = titleStyleAttributes.MSAttributedStringColorAttribute.hexValue();
+							titleStyleFont.lineHeight = titleStyleAttributes.NSParagraphStyle.minimumLineHeight();
 
 							// If lineHeight (and thus offset) is 0...
 							if (titleStyleFont.lineHeight == 0) {

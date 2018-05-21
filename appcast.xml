@@ -6,15 +6,15 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 15.1</title>
+			<title>Version 15.2</title>
 			<description>
 				<![CDATA[
 				<ul>
-				<li>Fix for group title text style color modification being overwritten.</li>
+				<li>Fix for some pre-existing group title text styles not returning a color value.</li>
 				</ul>
 				]]>
 			</description>
-			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="15.1" />
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="15.2" />
 		</item>
 	</channel>
 </rss>
