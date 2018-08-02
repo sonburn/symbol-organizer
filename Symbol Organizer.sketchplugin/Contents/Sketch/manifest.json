@@ -55,5 +55,6 @@
 	"authorEmail" : "jason.burns@synchronoss.com",
 	"name" : "Symbol Organizer",
 	"icon" : "icon.png",
-	"appcast" : "https://raw.githubusercontent.com/sonburn/symbol-organizer/master/appcast.xml"
+	"appcast" : "https://raw.githubusercontent.com/sonburn/symbol-organizer/master/appcast.xml",
+	"homepage" : "https://github.com/sonburn/symbol-organizer"
 }
