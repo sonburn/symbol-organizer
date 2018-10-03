@@ -137,7 +137,7 @@ var organize = function(context,type) {
 								if (titleStyle.newInstance) {
 									tempLayer.setStyle(titleStyle.newInstance())
 								} else {
-									tempLayer.setSharedStyleID(titleStyle.objectID());
+									tempLayer.setSharedStyle(titleStyle);
 								}
 
 								// Get temporary layer height and use as offset
@@ -200,7 +200,7 @@ var organize = function(context,type) {
 							if (titleStyle.newInstance) {
 								screenTitle.setStyle(titleStyle.newInstance());
 							} else {
-								screenTitle.setSharedStyleID(titleStyle.objectID());
+								screenTitle.setSharedStyle(titleStyle);
 							}
 
 							// Add screen title to title group

@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **15.4** - Fixes for Sketch 52; shared style is now being properly applied to new titles.
 * **15.3** - Fixes for Sketch 52; MSSharedStyle.initWithName_firstInstance and MSSharedStyle.newInstance were both phased out.
 * **15.2** - Fix for some pre-existing group title text styles not returning a color value.
 * **15.1** - Fix for group title text style color modification being overwritten.
