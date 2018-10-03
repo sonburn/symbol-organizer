@@ -133,7 +133,12 @@ var organize = function(context,type) {
 								// Apply style to a temporary layer
 								var tempLayer = MSTextLayer.new();
 								tempLayer.setStringValue("Temp");
-								tempLayer.setStyle(titleStyle.newInstance());
+
+								if (titleStyle.newInstance) {
+									tempLayer.setStyle(titleStyle.newInstance())
+								} else {
+									tempLayer.setSharedStyleID(titleStyle.objectID());
+								}
 
 								// Get temporary layer height and use as offset
 								offsetHeight = tempLayer.frame().height();
@@ -192,7 +197,11 @@ var organize = function(context,type) {
 							}
 
 							// Set screen title style
-							screenTitle.setStyle(titleStyle.newInstance());
+							if (titleStyle.newInstance) {
+								screenTitle.setStyle(titleStyle.newInstance());
+							} else {
+								screenTitle.setSharedStyleID(titleStyle.objectID());
+							}
 
 							// Add screen title to title group
 							titleGroup.addLayers([screenTitle]);
