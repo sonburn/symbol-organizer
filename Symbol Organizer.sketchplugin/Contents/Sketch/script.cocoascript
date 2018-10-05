@@ -3,12 +3,13 @@
 // Config
 var pluginName = "Symbol Organizer",
 	pluginDomain = "com.sonburn.sketchplugins.symbol-organizer",
+	defaultFontColor = (NSUserDefaults.standardUserDefaults().stringForKey("AppleInterfaceStyle") && NSUserDefaults.standardUserDefaults().stringForKey("AppleInterfaceStyle") == "Dark") ? "FFFFFF": "000000",
 	titleGroupName = "Titles",
 	titleStyleFont = {
 		fontFamily : ["SFProText-Bold","SFUIText-Bold","HelveticaNeue-Bold"],
 		fontFace : "SFProText-Bold",
 		fontSize : 20,
-		fontColor : "000000",
+		fontColor : defaultFontColor,
 		lineHeight : 24,
 		textAlignment : 0
 	},
