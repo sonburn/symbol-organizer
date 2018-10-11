@@ -6,15 +6,15 @@
 		<description>Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.</description>
 		<language>en</language>
 		<item>
-			<title>Version 15.5</title>
+			<title>Version 15.6</title>
 			<description>
 				<![CDATA[
 				<ul>
-				<li>The default font color for group titles will now change to white if using dark theme.</li>
+				<li>Fix for displaying titles in versions prior to Sketch 52.</li>
 				</ul>
 				]]>
 			</description>
-			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="15.5" />
+			<enclosure url="https://github.com/sonburn/symbol-organizer/archive/master.zip" sparkle:version="15.6" />
 		</item>
 	</channel>
 </rss>

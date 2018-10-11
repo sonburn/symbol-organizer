@@ -50,7 +50,7 @@
 		]
 	},
 	"identifier" : "com.sonburn.sketchplugins.symbol-organizer",
-	"version" : "15.5",
+	"version" : "15.6",
 	"description" : "Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.",
 	"authorEmail" : "jason.burns@synchronoss.com",
 	"name" : "Symbol Organizer",

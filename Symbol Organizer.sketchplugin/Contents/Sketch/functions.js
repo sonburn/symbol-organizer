@@ -11,11 +11,12 @@ function actionWithType(context,type) {
 }
 
 function addTextStyle(context,styleName,theStyle) {
+	var sketchVersion = MSApplicationMetadata.metadata().appVersion;
 	var textStyles = context.document.documentData().layerTextStyles();
 
 	if (textStyles.addSharedStyleWithName_firstInstance) {
 		textStyles.addSharedStyleWithName_firstInstance(styleName,theStyle.style());
-	} else if (textStyles.initWithName_firstInstance) {
+	} else if (sketchVersion < 52) {
 		var textStyle = MSSharedStyle.alloc().initWithName_firstInstance(styleName,theStyle.style());
 
 		textStyles.addSharedObject(textStyle);

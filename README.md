@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **15.6** - Fix for displaying titles in versions prior to Sketch 52.
 * **15.5** - The default font color for group titles will now change to white if using dark theme.
 * **15.4** - Fixes for Sketch 52; shared style is now being properly applied to new titles.
 * **15.3** - Fixes for Sketch 52; MSSharedStyle.initWithName_firstInstance and MSSharedStyle.newInstance were both phased out.
