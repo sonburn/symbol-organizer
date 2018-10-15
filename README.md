@@ -1,8 +1,8 @@
-![Symbol Organizer](https://raw.githubusercontent.com/sonburn/symbol-organizer/master/logo.png)
+![Symbol Organizer](https://raw.githubusercontent.com/sonburn/symbol-organizer/master/images/logo.png)
 
 Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names. Also provides the ability to choose the granularity of the groups, layout symbols horizontally or vertically, set a maximum of symbols per row/column, reverse the layer list sort direction, sequentially rename duplicate symbols, gather symbols from other pages, and remove unused symbols (symbols which are nested in other symbols, or used as overrides, will NOT be removed).
 
-![Symbol Organizer](https://raw.githubusercontent.com/sonburn/symbol-organizer/master/Screenshots/Symbol%20Organizer.png)
+![Symbol Organizer](https://raw.githubusercontent.com/sonburn/symbol-organizer/master/images/screenshot.png)
 
 <a href="http://bit.ly/SketchRunnerWebsite">
 	<img width="160" height="41" src="http://bit.ly/RunnerBadgeBlue" alt="runner-badge-blue">
@@ -13,7 +13,7 @@ Organize your symbols page, and layer list, alphabetically and into groupings de
 </a>
 
 <a href="https://www.paypal.me/sonburn">
-	<img width="160" height="41" src="https://raw.githubusercontent.com/DWilliames/PDF-export-sketch-plugin/master/images/paypal-badge.png">
+	<img width="160" height="41" src="https://raw.githubusercontent.com/sonburn/symbol-organizer/master/images/donate.png">
 </a>
 
 # Usage
