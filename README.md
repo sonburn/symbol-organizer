@@ -80,7 +80,7 @@ To find your plugins directory...
 
 # Support
 
-If you find this plugin helpful, or want to support my plugin development, consider buying me ☕️ via <a href="https://www.paypal.me/sonburn">PayPal</a>.
+If you find this plugin helpful, or want to support my plugin development, buy me ☕️ via <a href="https://www.paypal.me/sonburn">PayPal</a>.
 
 # License
 
