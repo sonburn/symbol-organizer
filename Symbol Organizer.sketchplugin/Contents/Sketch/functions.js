@@ -119,6 +119,19 @@ function createLabel(text,size,frame) {
 	var label = NSTextField.alloc().initWithFrame(frame);
 
 	label.setStringValue(text);
+	label.setFont(NSFont.systemFontOfSize(size));
+	label.setBezeled(false);
+	label.setDrawsBackground(false);
+	label.setEditable(false);
+	label.setSelectable(false);
+
+	return label;
+}
+
+function createBoldLabel(text,size,frame) {
+	var label = NSTextField.alloc().initWithFrame(frame);
+
+	label.setStringValue(text);
 	label.setFont(NSFont.boldSystemFontOfSize(size));
 	label.setBezeled(false);
 	label.setDrawsBackground(false);
@@ -128,13 +141,13 @@ function createLabel(text,size,frame) {
 	return label;
 }
 
-function createDescription(text,size,frame,alpha) {
+function createDescription(text,size,frame) {
 	var label = NSTextField.alloc().initWithFrame(frame),
-		alpha = (alpha) ? alpha : 0.6;
+		textColor = (isUsingDarkTheme()) ? NSColor.lightGrayColor() : NSColor.darkGrayColor();
 
 	label.setStringValue(text);
 	label.setFont(NSFont.systemFontOfSize(size));
-	label.setTextColor(NSColor.colorWithCalibratedRed_green_blue_alpha(0/255,0/255,0/255,alpha));
+	label.setTextColor(textColor);
 	label.setBezeled(false);
 	label.setDrawsBackground(false);
 	label.setEditable(false);
@@ -209,6 +222,10 @@ function getTextStyleByName(context,styleName,removeStyle) {
 	}
 
 	return false;
+}
+
+function isUsingDarkTheme() {
+	return (NSUserDefaults.standardUserDefaults().stringForKey("AppleInterfaceStyle") == "Dark") ? true : false;
 }
 
 function renameDuplicateSymbols(symbols) {

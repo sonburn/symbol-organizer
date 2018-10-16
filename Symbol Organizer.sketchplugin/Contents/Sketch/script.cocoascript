@@ -3,17 +3,16 @@
 // Config
 var pluginName = "Symbol Organizer",
 	pluginDomain = "com.sonburn.sketchplugins.symbol-organizer",
-	defaultFontColor = (NSUserDefaults.standardUserDefaults().stringForKey("AppleInterfaceStyle") && NSUserDefaults.standardUserDefaults().stringForKey("AppleInterfaceStyle") == "Dark") ? "FFFFFF": "000000",
 	titleGroupName = "Titles",
 	titleStyleFont = {
 		fontFamily : ["SFProText-Bold","SFUIText-Bold","HelveticaNeue-Bold"],
 		fontFace : "SFProText-Bold",
 		fontSize : 20,
-		fontColor : defaultFontColor,
+		fontColor : (isUsingDarkTheme()) ? "FFFFFF": "000000",
 		lineHeight : 24,
 		textAlignment : 0
 	},
-	debugMode = false;
+	debugMode = true;
 
 // Strings
 var strPageContainsArtboards = "This page contains artboards and symbols. Symbol Organizer can only be used on pages with just symbols.",
@@ -37,292 +36,288 @@ var organize = function(context,type) {
 	// Current page
 	var page = context.document.currentPage();
 
-	// If the current page has symbols...
-	if (page.symbols().count() != 0) {
-		// If the current page only contains symbols...
-		if (page.artboards().count() == page.symbols().count()) {
-			// Get layout settings
-			var layoutSettings = getLayoutSettings(context,type);
-
-			// If layout settings were retrieved...
-			if (layoutSettings) {
-				// Layout variables
-				var x = 0;
-				var y = 0;
-				var gPad = parseInt(layoutSettings.gPad);
-				var xPad = parseInt(layoutSettings.xPad);
-				var yPad = parseInt(layoutSettings.yPad);
-				var maxPer = (layoutSettings.maxPer > 0) ? layoutSettings.maxPer : 0;
-
-				// If user wants to remove unused symbols...
-				if (layoutSettings.removeSymbols == 1) {
-					// Remove unused symbols
-					var removedSymbolCount = removeUnusedSymbols(context,pluginDomain);
-				}
-
-				// Find titles group
-				var titleGroup = findLayerByName(page,titleGroupName);
-
-				// If titles group exists, remove it
-				if (titleGroup) page.removeLayer(titleGroup);
-
-				// If the document still has symbols...
-				if (page.symbols().count() != 0) {
-					// Create a symbols object, of either all symbols or just Symbols page symbols
-					var symbols = (layoutSettings.gatherSymbols == 1) ? (MSApplicationMetadata.metadata().appVersion > 46) ? context.document.documentData().localSymbols() : context.document.documentData().allSymbols() : page.symbols();
-
-					// Sort the symbols object by name
-					symbols.sort(sortSymbolsByName);
-
-					// if user wants to rename duplicate symbols...
-					if (layoutSettings.renameSymbols == 1) {
-						symbols = renameDuplicateSymbols(symbols);
-					}
-
-					// If user wants to reverse the sort order
-					var sortedSymbols = (layoutSettings.reverseOrder == 1) ? symbols.reverseObjectEnumerator().allObjects() : symbols;
-
-					// Sort the layer list
-					sortLayerList(sortedSymbols,page);
-
-					// Create the group object
-					var groupLayout = createGroupObject(symbols,layoutSettings.groupDepth);
-
-					// Reset page origin
-					page.setRulerBase(CGPointMake(0,0));
-
-					// If user wants to display group titles...
-					if (layoutSettings.displayTitles == 1) {
-						// Title style variables
-						if (layoutSettings.sortDirection == 1) titleStyleFont.textAlignment = 1;
-						var offsetHeight = titleStyleFont.lineHeight;
-
-						// Check for title style
-						var titleStyle = getTextStyleByName(context,layoutSettings.styleName.trim());
-
-						// If title style does not exist...
-						if (!titleStyle) {
-							// System font variable
-							var systemFontToUse;
-
-							// Iterate through family fonts...
-							for (var i = 0; i < titleStyleFont.fontFamily.length; i++) {
-								// If a system font has not been determined to exist yet...
-								if (!systemFontToUse) {
-									// If this system font exists, set system font variable
-									if (systemFontExists(titleStyleFont.fontFamily[i])) systemFontToUse = titleStyleFont.fontFamily[i];
-								}
-							}
-
-							// Update the titleStyleFont object's font face to an existing system font
-							titleStyleFont.fontFace = systemFontToUse;
-
-							// Add title style
-							titleStyle = addTextStyle(context,layoutSettings.styleName.trim(),createTextStyle(titleStyleFont));
-						} else {
-							// Title style attributes
-							var titleStyleAttributes = titleStyle.style().textStyle().attributes();
-
-							// Respect potential for user modified style
-							titleStyleFont.fontFace = titleStyleAttributes.NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
-							titleStyleFont.fontSize = titleStyleAttributes.NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
-							if (titleStyleAttributes.MSAttributedStringColorAttribute && titleStyleAttributes.MSAttributedStringColorAttribute.hexValue()) titleStyleFont.fontColor = titleStyleAttributes.MSAttributedStringColorAttribute.hexValue();
-							titleStyleFont.lineHeight = titleStyleAttributes.NSParagraphStyle.minimumLineHeight();
-
-							// If lineHeight (and thus offset) is 0...
-							if (titleStyleFont.lineHeight == 0) {
-								// Apply style to a temporary layer
-								var tempLayer = MSTextLayer.new();
-								tempLayer.setStringValue("Temp");
-
-								if (titleStyle.newInstance) {
-									tempLayer.setStyle(titleStyle.newInstance())
-								} else {
-									tempLayer.setSharedStyle(titleStyle);
-								}
-
-								// Get temporary layer height and use as offset
-								offsetHeight = tempLayer.frame().height();
-							}
-
-							// Update title style
-							titleStyle = updateTextStyle(context,layoutSettings.styleName.trim(),createTextStyle(titleStyleFont));
-						}
-
-						// Create new screen title group
-						titleGroup = MSLayerGroup.new();
-						titleGroup.setName(titleGroupName);
-						titleGroup.frame().setX((layoutSettings.sortDirection == 0) ? 0 : -xPad);
-						titleGroup.frame().setY((layoutSettings.sortDirection == 0) ? -(offsetHeight+yPad) : 0);
-						titleGroup.setIsLocked(true);
-						titleGroup.setHasClickThrough(true);
-					}
-
-					// Set tracker/counters
-					var groupSpace = 0;
-					var groupCount = 1;
-					var objectCount = 1;
-
-					// Iterate through the group object
-					for (var i = 0; i < groupLayout.length; i++) {
-						// Symbol variables
-						var symbol = symbols.objectAtIndex(groupLayout[i]["index"]);
-						var symbolFrame = symbol.frame();
-
-						// If user wants to display titles, and this is the first item in the first group, or a brand new group...
-						if (layoutSettings.displayTitles == 1 && (objectCount == 1 || groupCount != groupLayout[i]["group"])) {
-							// Title position variables
-							var titleTextX = 0;
-							var titleTextY = 0;
-							var titleTextAlign = 0;
-
-							// Update title position variables per the layout direction
-							if (layoutSettings.sortDirection == 0) {
-								titleTextX = (objectCount == 1) ? 0 : x + groupSpace + gPad;
-							} else {
-								titleTextY = (objectCount == 1) ? 0 : y + groupSpace + gPad;
-								titleTextAlign = 1;
-							}
-
-							// Create screen title
-							var screenTitle = MSTextLayer.new();
-							screenTitle.setStringValue(groupLayout[i]["prefix"]);
-							screenTitle.setName(groupLayout[i]["prefix"]);
-
-							if (titleTextAlign == 0) {
-								screenTitle.frame().setY(titleTextY);
-								screenTitle.frame().setX(titleTextX);
-							} else {
-								screenTitle.frame().setY(titleTextY);
-								screenTitle.frame().setX(titleTextX-screenTitle.frame().width());
-							}
-
-							// Set screen title style
-							if (titleStyle.newInstance) {
-								screenTitle.setStyle(titleStyle.newInstance());
-							} else {
-								screenTitle.setSharedStyle(titleStyle);
-							}
-
-							// Add screen title to title group
-							titleGroup.addLayers([screenTitle]);
-						}
-
-						// If the current group number doesn't match the group counter
-						if (groupLayout[i]["group"] != groupCount) {
-							// Update group position variables per the layout direction
-							if (layoutSettings.sortDirection == 0) {
-								// Reset y position, set the x position of the next row
-								y = 0;
-								x += groupSpace + gPad;
-							} else {
-								// Reset x position, set the y position of the next row
-								x = 0;
-								y += groupSpace + gPad;
-							}
-
-							// Reset the group space tracker
-							groupSpace = 0;
-
-							// Increment the group counter
-							groupCount++;
-
-							// Reset the object counter
-							objectCount = 1;
-						}
-
-						// If the max per row is greater than 0, and object count is greater than max per row
-						if (maxPer > 0 && objectCount > maxPer) {
-							// Update group position variables per the layout direction
-							if (layoutSettings.sortDirection == 0) {
-								// Reset y position, set the x position of the next row
-								y = 0;
-								x += groupSpace + xPad;
-							} else {
-								// Reset x position, set the y position of the next row
-								x = 0;
-								y += groupSpace + yPad;
-							}
-
-							// Reset the group space tracker
-							groupSpace = 0;
-
-							// Reset the object counter
-							objectCount = 1;
-						}
-
-						// Position the symbol
-						symbolFrame.x = x;
-						symbolFrame.y = y;
-
-						// Update group position variables per the layout direction
-						if (layoutSettings.sortDirection == 0) {
-							// If this symbol is wider than previous symbols in row
-							if (symbolFrame.width() > groupSpace) {
-								// Increase the width of the row
-								groupSpace = symbolFrame.width();
-							}
-
-							// Set the y position for the next symbol
-							y += symbolFrame.height() + yPad;
-						} else {
-							// If this symbol is taller than previous symbols in row
-							if (symbolFrame.height() > groupSpace) {
-								// Increase the height of the row
-								groupSpace = symbolFrame.height();
-							}
-
-							// Set the x position for the next symbol
-							x += symbolFrame.width() + xPad;
-						}
-
-						// Increment the object counter
-						objectCount++;
-					}
-
-					// If user wants to display group titles...
-					if (layoutSettings.displayTitles == 1) {
-						// Add title group to page
-						page.addLayers([titleGroup]);
-						titleGroup.resizeToFitChildrenWithOption(0);
-					}
-
-					// Collapse symbols
-					actionWithType(context,"MSCollapseAllGroupsAction").doPerformAction(nil);
-
-					// Adjust view
-					context.document.contentDrawView().zoomToFitRect(page.contentBounds());
-
-					// Feedback to user
-					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
-						context.document.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
-					} else {
-						context.document.showMessage(strSymbolLayoutComplete);
-					}
-				} else {
-					// Feedback to user
-					if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
-						context.document.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
-					} else {
-						displayDialog(pluginName,strNoSymbolsOnPage);
-					}
-				}
-
-				if (!debugMode) googleAnalytics(context,"organize",type);
-			}
-			// If layout settings were not retrieved...
-			else {
-				// Don't do anything as the user likely canceled
-			}
-		}
-		// If the current page does not only contain symbols...
-		else {
-			displayDialog(pluginName,strPageContainsArtboards);
-		}
-	}
 	// If the current page does not have symbols...
-	else {
+	if (page.symbols().count() == 0) {
 		displayDialog(pluginName,strNoSymbolsOnPage);
+		return;
+	}
+
+	// If the current page does not only contain symbols...
+	if (page.artboards().count() != page.symbols().count()) {
+		displayDialog(pluginName,strPageContainsArtboards);
+		return;
+	}
+
+	// Get layout settings
+	var layoutSettings = getLayoutSettings(context,type);
+
+	// If layout settings were retrieved...
+	if (layoutSettings) {
+		// Layout variables
+		var x = 0;
+		var y = 0;
+		var gPad = parseInt(layoutSettings.gPad);
+		var xPad = parseInt(layoutSettings.xPad);
+		var yPad = parseInt(layoutSettings.yPad);
+		var maxPer = (layoutSettings.maxPer > 0) ? layoutSettings.maxPer : 0;
+
+		// If user wants to remove unused symbols...
+		if (layoutSettings.removeSymbols == 1) {
+			// Remove unused symbols
+			var removedSymbolCount = removeUnusedSymbols(context,pluginDomain);
+		}
+
+		// Find titles group
+		var titleGroup = findLayerByName(page,titleGroupName);
+
+		// If titles group exists, remove it
+		if (titleGroup) page.removeLayer(titleGroup);
+
+		// If the document still has symbols...
+		if (page.symbols().count() == 0) {
+			// Feedback to user
+			if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
+				context.document.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
+			} else {
+				displayDialog(pluginName,strNoSymbolsOnPage);
+			}
+
+			return;
+		}
+
+		// Create a symbols object, of either all symbols or just Symbols page symbols
+		var symbols = (layoutSettings.gatherSymbols == 1) ? (MSApplicationMetadata.metadata().appVersion > 46) ? context.document.documentData().localSymbols() : context.document.documentData().allSymbols() : page.symbols();
+
+		// Sort the symbols object by name
+		symbols.sort(sortSymbolsByName);
+
+		// if user wants to rename duplicate symbols...
+		if (layoutSettings.renameSymbols == 1) {
+			symbols = renameDuplicateSymbols(symbols);
+		}
+
+		// If user wants to reverse the sort order
+		var sortedSymbols = (layoutSettings.reverseOrder == 1) ? symbols.reverseObjectEnumerator().allObjects() : symbols;
+
+		// Sort the layer list
+		sortLayerList(sortedSymbols,page);
+
+		// Create the group object
+		var groupLayout = createGroupObject(symbols,layoutSettings.groupDepth);
+
+		// Reset page origin
+		page.setRulerBase(CGPointMake(0,0));
+
+		// If user wants to display group titles...
+		if (layoutSettings.displayTitles == 1) {
+			// Title style variables
+			if (layoutSettings.sortDirection == 1) titleStyleFont.textAlignment = 1;
+			var offsetHeight = titleStyleFont.lineHeight;
+
+			// Check for title style
+			var titleStyle = getTextStyleByName(context,layoutSettings.styleName.trim());
+
+			// If title style does not exist...
+			if (!titleStyle) {
+				// System font variable
+				var systemFontToUse;
+
+				// Iterate through family fonts...
+				for (var i = 0; i < titleStyleFont.fontFamily.length; i++) {
+					// If a system font has not been determined to exist yet...
+					if (!systemFontToUse) {
+						// If this system font exists, set system font variable
+						if (systemFontExists(titleStyleFont.fontFamily[i])) systemFontToUse = titleStyleFont.fontFamily[i];
+					}
+				}
+
+				// Update the titleStyleFont object's font face to an existing system font
+				titleStyleFont.fontFace = systemFontToUse;
+
+				// Add title style
+				titleStyle = addTextStyle(context,layoutSettings.styleName.trim(),createTextStyle(titleStyleFont));
+			} else {
+				// Title style attributes
+				var titleStyleAttributes = titleStyle.style().textStyle().attributes();
+
+				// Respect potential for user modified style
+				titleStyleFont.fontFace = titleStyleAttributes.NSFont.fontDescriptor().objectForKey(NSFontNameAttribute);
+				titleStyleFont.fontSize = titleStyleAttributes.NSFont.fontDescriptor().objectForKey(NSFontSizeAttribute);
+				if (titleStyleAttributes.MSAttributedStringColorAttribute && titleStyleAttributes.MSAttributedStringColorAttribute.hexValue()) titleStyleFont.fontColor = titleStyleAttributes.MSAttributedStringColorAttribute.hexValue();
+				titleStyleFont.lineHeight = titleStyleAttributes.NSParagraphStyle.minimumLineHeight();
+
+				// If lineHeight (and thus offset) is 0...
+				if (titleStyleFont.lineHeight == 0) {
+					// Apply style to a temporary layer
+					var tempLayer = MSTextLayer.new();
+					tempLayer.setStringValue("Temp");
+
+					if (titleStyle.newInstance) {
+						tempLayer.setStyle(titleStyle.newInstance())
+					} else {
+						tempLayer.setSharedStyle(titleStyle);
+					}
+
+					// Get temporary layer height and use as offset
+					offsetHeight = tempLayer.frame().height();
+				}
+
+				// Update title style
+				titleStyle = updateTextStyle(context,layoutSettings.styleName.trim(),createTextStyle(titleStyleFont));
+			}
+
+			// Create new screen title group
+			titleGroup = MSLayerGroup.new();
+			titleGroup.setName(titleGroupName);
+			titleGroup.frame().setX((layoutSettings.sortDirection == 0) ? 0 : -xPad);
+			titleGroup.frame().setY((layoutSettings.sortDirection == 0) ? -(offsetHeight+yPad) : 0);
+			titleGroup.setIsLocked(true);
+			titleGroup.setHasClickThrough(true);
+		}
+
+		// Set tracker/counters
+		var groupSpace = 0;
+		var groupCount = 1;
+		var objectCount = 1;
+
+		// Iterate through the group object
+		for (var i = 0; i < groupLayout.length; i++) {
+			// Symbol variables
+			var symbol = symbols.objectAtIndex(groupLayout[i]["index"]);
+			var symbolFrame = symbol.frame();
+
+			// If user wants to display titles, and this is the first item in the first group, or a brand new group...
+			if (layoutSettings.displayTitles == 1 && (objectCount == 1 || groupCount != groupLayout[i]["group"])) {
+				// Title position variables
+				var titleTextX = 0;
+				var titleTextY = 0;
+				var titleTextAlign = 0;
+
+				// Update title position variables per the layout direction
+				if (layoutSettings.sortDirection == 0) {
+					titleTextX = (objectCount == 1) ? 0 : x + groupSpace + gPad;
+				} else {
+					titleTextY = (objectCount == 1) ? 0 : y + groupSpace + gPad;
+					titleTextAlign = 1;
+				}
+
+				// Create screen title
+				var screenTitle = MSTextLayer.new();
+				screenTitle.setStringValue(groupLayout[i]["prefix"]);
+				screenTitle.setName(groupLayout[i]["prefix"]);
+
+				if (titleTextAlign == 0) {
+					screenTitle.frame().setY(titleTextY);
+					screenTitle.frame().setX(titleTextX);
+				} else {
+					screenTitle.frame().setY(titleTextY);
+					screenTitle.frame().setX(titleTextX - screenTitle.frame().width());
+				}
+
+				// Set screen title style
+				if (titleStyle.newInstance) {
+					screenTitle.setStyle(titleStyle.newInstance());
+				} else {
+					screenTitle.setSharedStyle(titleStyle);
+				}
+
+				// Add screen title to title group
+				titleGroup.addLayers([screenTitle]);
+			}
+
+			// If the current group number doesn't match the group counter
+			if (groupLayout[i]["group"] != groupCount) {
+				// Update group position variables per the layout direction
+				if (layoutSettings.sortDirection == 0) {
+					// Reset y position, set the x position of the next row
+					y = 0;
+					x += groupSpace + gPad;
+				} else {
+					// Reset x position, set the y position of the next row
+					x = 0;
+					y += groupSpace + gPad;
+				}
+
+				// Reset the group space tracker
+				groupSpace = 0;
+
+				// Increment the group counter
+				groupCount++;
+
+				// Reset the object counter
+				objectCount = 1;
+			}
+
+			// If the max per row is greater than 0, and object count is greater than max per row
+			if (maxPer > 0 && objectCount > maxPer) {
+				// Update group position variables per the layout direction
+				if (layoutSettings.sortDirection == 0) {
+					// Reset y position, set the x position of the next row
+					y = 0;
+					x += groupSpace + xPad;
+				} else {
+					// Reset x position, set the y position of the next row
+					x = 0;
+					y += groupSpace + yPad;
+				}
+
+				// Reset the group space tracker
+				groupSpace = 0;
+
+				// Reset the object counter
+				objectCount = 1;
+			}
+
+			// Position the symbol
+			symbolFrame.x = x;
+			symbolFrame.y = y;
+
+			// Update group position variables per the layout direction
+			if (layoutSettings.sortDirection == 0) {
+				// If this symbol is wider than previous symbols in row
+				if (symbolFrame.width() > groupSpace) {
+					// Increase the width of the row
+					groupSpace = symbolFrame.width();
+				}
+
+				// Set the y position for the next symbol
+				y += symbolFrame.height() + yPad;
+			} else {
+				// If this symbol is taller than previous symbols in row
+				if (symbolFrame.height() > groupSpace) {
+					// Increase the height of the row
+					groupSpace = symbolFrame.height();
+				}
+
+				// Set the x position for the next symbol
+				x += symbolFrame.width() + xPad;
+			}
+
+			// Increment the object counter
+			objectCount++;
+		}
+
+		// If user wants to display group titles...
+		if (layoutSettings.displayTitles == 1) {
+			// Add title group to page
+			page.addLayers([titleGroup]);
+			titleGroup.resizeToFitChildrenWithOption(0);
+		}
+
+		// Collapse symbols
+		actionWithType(context,"MSCollapseAllGroupsAction").doPerformAction(nil);
+
+		// Adjust view
+		context.document.contentDrawView().zoomToFitRect(page.contentBounds());
+
+		// Feedback to user
+		if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
+			context.document.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
+		} else {
+			context.document.showMessage(strSymbolLayoutComplete);
+		}
+
+		if (!debugMode) googleAnalytics(context,"organize",type);
 	}
 }
 
@@ -385,8 +380,9 @@ function getLayoutSettings(context,type) {
 			leftColWidth = 120,
 			maxPerLabelText = (defaultSettings.sortDirection == 0) ? strSymbolMaxPerCol : strSymbolMaxPerRow,
 			settingPad = 10,
+			settingX = 0,
 			settingY = 0,
-			switchHeight = 14,
+			switchHeight = 16,
 			textOffset = 2,
 			windowWidth = 350;
 
@@ -401,10 +397,10 @@ function getLayoutSettings(context,type) {
 
 		alertContent.setFlipped(true);
 
-		var globalSettingsLabel = createLabel("Global Settings",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
+		var globalSettingsLabel = createBoldLabel("Global Settings",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
 		alertContent.addSubview(globalSettingsLabel);
 
-		var globalSettingsValue = createCheckbox({name:"Use & modify global settings",value:1},defaultSettings.globalSettings,NSMakeRect(leftColWidth,settingY+textOffset,windowWidth-leftColWidth,switchHeight));
+		var globalSettingsValue = createCheckbox({name:"Use & modify global settings",value:1},defaultSettings.globalSettings,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,switchHeight));
 		alertContent.addSubview(globalSettingsValue);
 
 		globalSettingsValue.setAction("callAction:");
@@ -432,23 +428,23 @@ function getLayoutSettings(context,type) {
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var groupGranularityLabel = createLabel("Group Definition",12,NSMakeRect(0,settingY+textOffset*2,leftColWidth,labelHeight));
+		var groupGranularityLabel = createBoldLabel("Group Definition",12,NSMakeRect(0,settingY + textOffset * 2,leftColWidth,labelHeight));
 		alertContent.addSubview(groupGranularityLabel);
 
 		var groupGranularityValue = createSelect(["1st","2nd","3rd","4th","5th","6th","7th","8th"],defaultSettings.groupDepth,NSMakeRect(leftColWidth,settingY,fieldWidth,28));
 		alertContent.addSubview(groupGranularityValue);
 
-		var groupGranularityExtra = createDescription("Match",12,NSMakeRect(CGRectGetMaxX(groupGranularityValue.frame())+textOffset,settingY+textOffset*2,60,labelHeight),1.0);
+		var groupGranularityExtra = createLabel("Match",12,NSMakeRect(CGRectGetMaxX(groupGranularityValue.frame()) + textOffset,settingY + textOffset * 2,60,labelHeight));
 		alertContent.addSubview(groupGranularityExtra);
 
 		settingY = CGRectGetMaxY(groupGranularityValue.frame()) + textOffset;
 
-		var groupGranularityDesc = createDescription(strGroupGranularityDesc,11,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,28));
+		var groupGranularityDesc = createDescription(strGroupGranularityDesc,11,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,28));
 		alertContent.addSubview(groupGranularityDesc);
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var groupDirectionLabel = createLabel("Layout Direction",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
+		var groupDirectionLabel = createBoldLabel("Layout Direction",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
 		alertContent.addSubview(groupDirectionLabel);
 
 		var groupDirectionValue = createRadioButtons(["Horizontal","Vertical"],defaultSettings.sortDirection,0,leftColWidth,settingY);
@@ -466,7 +462,7 @@ function getLayoutSettings(context,type) {
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var groupSpaceLabel = createLabel("Group Space",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
+		var groupSpaceLabel = createBoldLabel("Group Space",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
 		alertContent.addSubview(groupSpaceLabel);
 
 		var groupSpaceValue = createField(defaultSettings.gPad,NSMakeRect(leftColWidth,settingY,fieldWidth,fieldHeight));
@@ -479,7 +475,7 @@ function getLayoutSettings(context,type) {
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var groupTitlesCheckbox = createCheckbox({name:"Display group titles",value:1},defaultSettings.displayTitles,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,switchHeight));
+		var groupTitlesCheckbox = createCheckbox({name:"Display group titles",value:1},defaultSettings.displayTitles,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,switchHeight));
 		alertContent.addSubview(groupTitlesCheckbox);
 
 		groupTitlesCheckbox.setAction("callAction:");
@@ -489,10 +485,10 @@ function getLayoutSettings(context,type) {
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var styleNameLabel = createLabel("Title Style Name",12,NSMakeRect(0,settingY+textOffset,leftColWidth,labelHeight));
+		var styleNameLabel = createBoldLabel("Title Style Name",12,NSMakeRect(0,settingY + textOffset,leftColWidth,labelHeight));
 		alertContent.addSubview(styleNameLabel);
 
-		var styleNameValue = createField(defaultSettings.styleName,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,fieldHeight));
+		var styleNameValue = createField(defaultSettings.styleName,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,fieldHeight));
 		alertContent.addSubview(styleNameValue);
 
 		styleNameValue.setEnabled(groupTitlesCheckbox.state());
@@ -504,10 +500,10 @@ function getLayoutSettings(context,type) {
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var reverseOrderLabel = createLabel("Layer List",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
+		var reverseOrderLabel = createBoldLabel("Layer List",12,NSMakeRect(0,settingY,leftColWidth,labelHeight));
 		alertContent.addSubview(reverseOrderLabel);
 
-		var reverseOrderCheckbox = createCheckbox({name:"Reverse sort order",value:1},defaultSettings.reverseOrder,NSMakeRect(leftColWidth,settingY+textOffset,windowWidth-leftColWidth,switchHeight));
+		var reverseOrderCheckbox = createCheckbox({name:"Reverse sort order",value:1},defaultSettings.reverseOrder,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,switchHeight));
 		alertContent.addSubview(reverseOrderCheckbox);
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
@@ -517,28 +513,33 @@ function getLayoutSettings(context,type) {
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var gatherSymbolsCheckbox = createCheckbox({name:"Gather symbols from other pages",value:1},defaultSettings.gatherSymbols,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,switchHeight));
+		var gatherSymbolsCheckbox = createCheckbox({name:"Gather symbols from other pages",value:1},defaultSettings.gatherSymbols,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,switchHeight));
 		alertContent.addSubview(gatherSymbolsCheckbox);
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var horizontalSpaceLabel = createLabel("Horizontal Space",12,NSMakeRect(0,settingY+textOffset,leftColWidth,labelHeight));
-		alertContent.addSubview(horizontalSpaceLabel);
+		var spacingLabel = createBoldLabel("Spacing",12,NSMakeRect(0,settingY + textOffset,leftColWidth,labelHeight));
+		alertContent.addSubview(spacingLabel);
 
 		var horizontalSpaceValue = createField(defaultSettings.xPad,NSMakeRect(leftColWidth,settingY,fieldWidth,fieldHeight));
 		alertContent.addSubview(horizontalSpaceValue);
 
-		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
+		settingX = CGRectGetMaxX(alertContent.subviews().lastObject().frame()) + textOffset;
 
-		var verticalSpaceLabel = createLabel("Vertical Space",12,NSMakeRect(0,settingY+textOffset,leftColWidth,labelHeight));
-		alertContent.addSubview(verticalSpaceLabel);
+		var horizontalSpaceLabel = createLabel("X",12,NSMakeRect(settingX,settingY + textOffset,leftColWidth,labelHeight));
+		alertContent.addSubview(horizontalSpaceLabel);
 
-		var verticalSpaceValue = createField(defaultSettings.yPad,NSMakeRect(leftColWidth,settingY,fieldWidth,fieldHeight));
+		var verticalSpaceValue = createField(defaultSettings.yPad,NSMakeRect(settingX + settingPad * 3,settingY,fieldWidth,fieldHeight));
 		alertContent.addSubview(verticalSpaceValue);
 
+		settingX = CGRectGetMaxX(alertContent.subviews().lastObject().frame()) + textOffset;
+
+		var verticalSpaceLabel = createLabel("Y",12,NSMakeRect(settingX,settingY + textOffset,leftColWidth,labelHeight));
+		alertContent.addSubview(verticalSpaceLabel);
+
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var symbolMaxPerLabel = createLabel(maxPerLabelText,12,NSMakeRect(0,settingY + textOffset,leftColWidth,labelHeight));
+		var symbolMaxPerLabel = createBoldLabel(maxPerLabelText,12,NSMakeRect(0,settingY + textOffset,leftColWidth,labelHeight));
 		alertContent.addSubview(symbolMaxPerLabel);
 
 		var symbolMaxPerValue = createField(defaultSettings.maxPer,NSMakeRect(leftColWidth,settingY,fieldWidth,fieldHeight));
@@ -546,17 +547,17 @@ function getLayoutSettings(context,type) {
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var renameSymbolsCheckbox = createCheckbox({name:"Sequentially number duplicates",value:1},defaultSettings.renameSymbols,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,switchHeight));
+		var renameSymbolsCheckbox = createCheckbox({name:"Sequentially number duplicates",value:1},defaultSettings.renameSymbols,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,switchHeight));
 		alertContent.addSubview(renameSymbolsCheckbox);
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var removeSymbolsCheckbox = createCheckbox({name:"Remove unused symbols on page",value:1},defaultSettings.removeSymbols,NSMakeRect(leftColWidth,settingY,windowWidth-leftColWidth,switchHeight));
+		var removeSymbolsCheckbox = createCheckbox({name:"Remove unused symbols on page",value:1},defaultSettings.removeSymbols,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,switchHeight));
 		alertContent.addSubview(removeSymbolsCheckbox);
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + textOffset;
 
-		var removeSymbolsDesc = createDescription("Presents a checklist for your review and confirmation.",11,NSMakeRect(leftColWidth+18,settingY,windowWidth-leftColWidth-18,28));
+		var removeSymbolsDesc = createDescription("Presents a checklist for your review and confirmation.",11,NSMakeRect(leftColWidth + 18,settingY,windowWidth - leftColWidth - 18,28));
 		alertContent.addSubview(removeSymbolsDesc);
 
 		alertContent.frame = NSMakeRect(0,0,windowWidth,CGRectGetMaxY(removeSymbolsDesc.frame()));
