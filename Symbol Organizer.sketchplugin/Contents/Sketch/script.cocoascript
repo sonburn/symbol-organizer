@@ -12,7 +12,7 @@ var pluginName = "Symbol Organizer",
 		lineHeight : 24,
 		textAlignment : 0
 	},
-	debugMode = true;
+	debugMode = false;
 
 // Strings
 var strPageContainsArtboards = "This page contains artboards and symbols. Symbol Organizer can only be used on pages with just symbols.",
