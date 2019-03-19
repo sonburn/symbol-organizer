@@ -1,5 +1,7 @@
 @import "functions.js";
 
+var sketch = require('sketch');
+
 // Config
 var pluginName = "Symbol Organizer",
 	pluginDomain = "com.sonburn.sketchplugins.symbol-organizer",
@@ -18,7 +20,6 @@ var pluginName = "Symbol Organizer",
 var strPageContainsArtboards = "This page contains artboards and symbols. Symbol Organizer can only be used on pages with just symbols.",
 	strNoSymbolsOnPage = "There are no symbols to organize on this page.",
 	strSymbolLayoutComplete = "Symbols are now organized",
-	strSymbolLayoutCompleteWithRemoves = " unused symbol(s) removed",
 	strAlertInformativeText = "Organize your symbols page alphabetically (including layer list) and into groups, determined by your symbol names.",
 	strGroupGranularityDesc = "Specifies the \"/\" position in each symbol name which should define the group.",
 	strSymbolMaxPerRow = "Max Per Row",
@@ -38,13 +39,13 @@ var organize = function(context,type) {
 
 	// If the current page does not have symbols...
 	if (page.symbols().count() == 0) {
-		displayDialog(pluginName,strNoSymbolsOnPage);
+		sketch.UI.alert(pluginName,strNoSymbolsOnPage);
 		return;
 	}
 
 	// If the current page does not only contain symbols...
 	if (page.artboards().count() != page.symbols().count()) {
-		displayDialog(pluginName,strPageContainsArtboards);
+		sketch.UI.alert(pluginName,strPageContainsArtboards);
 		return;
 	}
 
@@ -61,29 +62,11 @@ var organize = function(context,type) {
 		var yPad = parseInt(layoutSettings.yPad);
 		var maxPer = (layoutSettings.maxPer > 0) ? layoutSettings.maxPer : 0;
 
-		// If user wants to remove unused symbols...
-		if (layoutSettings.removeSymbols == 1) {
-			// Remove unused symbols
-			var removedSymbolCount = removeUnusedSymbols(context,pluginDomain);
-		}
-
 		// Find titles group
 		var titleGroup = findLayerByName(page,titleGroupName);
 
 		// If titles group exists, remove it
 		if (titleGroup) page.removeLayer(titleGroup);
-
-		// If the document still has symbols...
-		if (page.symbols().count() == 0) {
-			// Feedback to user
-			if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
-				context.document.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
-			} else {
-				displayDialog(pluginName,strNoSymbolsOnPage);
-			}
-
-			return;
-		}
 
 		// Create a symbols object, of either all symbols or just Symbols page symbols
 		var symbols = (layoutSettings.gatherSymbols == 1) ? (MSApplicationMetadata.metadata().appVersion > 46) ? context.document.documentData().localSymbols() : context.document.documentData().allSymbols() : page.symbols();
@@ -307,18 +290,92 @@ var organize = function(context,type) {
 		// Collapse symbols
 		actionWithType(context,"MSCollapseAllGroupsAction").doPerformAction(nil);
 
-		// Adjust view
-		context.document.contentDrawView().zoomToFitRect(page.contentBounds());
+		// If user wants to zoom out...
+		if (layoutSettings.zoomOut == 1) {
+			// Adjust view
+			context.document.contentDrawView().zoomToFitRect(page.contentBounds());
+		}
 
 		// Feedback to user
-		if (layoutSettings.removeSymbols == 1 && removedSymbolCount > 0) {
-			context.document.showMessage(strSymbolLayoutComplete + ", " + removedSymbolCount + strSymbolLayoutCompleteWithRemoves);
-		} else {
-			context.document.showMessage(strSymbolLayoutComplete);
-		}
+		sketch.UI.message(strSymbolLayoutComplete);
 
 		if (!debugMode) googleAnalytics(context,"organize",type);
 	}
+}
+
+var remove = function(context) {
+	var exemptSymbols = getExemptSymbols(),
+		removeSymbols = [],
+		listItemHeight = 24,
+		count = 0;
+
+	var predicate = NSPredicate.predicateWithFormat("className == %@ && isSafeToDelete == 1","MSSymbolMaster"),
+		symbols = context.document.currentPage().children().filteredArrayUsingPredicate(predicate);
+
+	symbols.forEach(function(symbol){
+		if (exemptSymbols.indexOf(String(symbol.symbolID())) == -1) removeSymbols.push(symbol);
+	});
+
+	if (removeSymbols.length == 0) {
+		sketch.UI.alert(pluginName,'All symbols appear to be in use, nothing to remove!');
+
+		return false;
+	}
+
+	var alertWindow = COSAlertWindow.new();
+	alertWindow.setIcon(NSImage.alloc().initByReferencingFile(context.plugin.urlForResourceNamed("icon.png").path()));
+	alertWindow.setMessageText("Remove Unused Symbols");
+	alertWindow.setInformativeText("The following symbols appear to be unused. Symbols which are nested in other symbols, or used as overrides, were ignored.");
+
+	var symbolListInnerFrameHeight = listItemHeight * (removeSymbols.length),
+		symbolListFrame = NSScrollView.alloc().initWithFrame(NSMakeRect(0,0,300,200)),
+		symbolListFrameSize = symbolListFrame.contentSize(),
+		symbolListInnerFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,symbolListFrameSize.width,symbolListInnerFrameHeight));
+
+	symbolListFrame.setHasVerticalScroller(true);
+	symbolListInnerFrame.setFlipped(true);
+	symbolListFrame.setDocumentView(symbolListInnerFrame);
+
+	for (var i = 0; i < removeSymbols.length; i++) {
+		symbolListInnerFrame.addSubview(createCheckbox({name:removeSymbols[i].name(),value:i},1,NSMakeRect(0,listItemHeight*count,300,listItemHeight)));
+		count++;
+	}
+
+	symbolListInnerFrame.scrollPoint(NSMakePoint(0,0));
+
+	alertWindow.addAccessoryView(symbolListFrame);
+
+	alertWindow.addButtonWithTitle("Remove Selected");
+	alertWindow.addButtonWithTitle("Cancel");
+
+	var responseCode = alertWindow.runModal();
+
+	if (responseCode == 1000) {
+		var symbolsToRemove = [];
+
+		for (var i = 0; i < removeSymbols.length; i++) {
+			if ([symbolListInnerFrame subviews][i].state() == 1) symbolsToRemove.push([symbolListInnerFrame subviews][i].tag());
+		}
+
+		if (symbolsToRemove.length == 0) {
+			sketch.UI.alert(pluginName,"You didn't select anything to remove.");
+
+			return false;
+		}
+
+		for (var i = 0; i < symbolsToRemove.length; i++) {
+			var symbolIndex = symbolsToRemove[i],
+				symbolToRemove = removeSymbols[symbolIndex];
+
+			symbolToRemove.removeFromParent();
+
+			log(symbolToRemove.name() + " was removed by Symbol Organizer");
+		}
+
+		sketch.UI.message(symbolsToRemove.length + " unused symbol(s) removed");
+	} else return false;
+
+	if (!debugMode) googleAnalytics(context,"remove","remove");
 }
 
 var report = function(context) {
@@ -358,7 +415,7 @@ function getLayoutSettings(context,type) {
 	defaultSettings.yPad = "100";
 	defaultSettings.maxPer = "";
 	defaultSettings.renameSymbols = 0;
-	defaultSettings.removeSymbols = 0;
+	defaultSettings.zoomOut = 1;
 
 	// Get document settings
 	var documentSettings = updateSettingsWithDocument(context,defaultSettings);
@@ -419,6 +476,7 @@ function getLayoutSettings(context,type) {
 			verticalSpaceValue.setStringValue(originalSettings.yPad);
 			symbolMaxPerValue.setStringValue(originalSettings.maxPer);
 			renameSymbolsCheckbox.setState(originalSettings.renameSymbols);
+			zoomOutCheckbox.setStringValue(originalSettings.zoomOut);
 		});
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
@@ -552,15 +610,10 @@ function getLayoutSettings(context,type) {
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;
 
-		var removeSymbolsCheckbox = createCheckbox({name:"Remove unused symbols on page",value:1},defaultSettings.removeSymbols,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,switchHeight));
-		alertContent.addSubview(removeSymbolsCheckbox);
+		var zoomOutCheckbox = createCheckbox({name:"Zoom & center after organizing",value:1},defaultSettings.zoomOut,NSMakeRect(leftColWidth,settingY,windowWidth - leftColWidth,switchHeight));
+		alertContent.addSubview(zoomOutCheckbox);
 
-		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + textOffset;
-
-		var removeSymbolsDesc = createDescription("Presents a checklist for your review and confirmation.",11,NSMakeRect(leftColWidth + 18,settingY,windowWidth - leftColWidth - 18,28));
-		alertContent.addSubview(removeSymbolsDesc);
-
-		alertContent.frame = NSMakeRect(0,0,windowWidth,CGRectGetMaxY(removeSymbolsDesc.frame()));
+		alertContent.frame = NSMakeRect(0,0,windowWidth,CGRectGetMaxY(zoomOutCheckbox.frame()));
 
 		alert.accessoryView = alertContent;
 
@@ -580,7 +633,7 @@ function getLayoutSettings(context,type) {
 			verticalSpaceValue,
 			symbolMaxPerValue,
 			renameSymbolsCheckbox,
-			removeSymbolsCheckbox,
+			zoomOutCheckbox,
 			buttonOrganize
 		]);
 
@@ -603,6 +656,7 @@ function getLayoutSettings(context,type) {
 				userDefaults.setObject_forKey(verticalSpaceValue.stringValue(),"yPad");
 				userDefaults.setObject_forKey(symbolMaxPerValue.stringValue(),"maxPer");
 				userDefaults.setObject_forKey(renameSymbolsCheckbox.state(),"renameSymbols");
+				userDefaults.setObject_forKey(zoomOutCheckbox.state(),"zoomOut");
 				userDefaults.synchronize();
 			} else {
 				context.command.setValue_forKey_onLayer(globalSettingsValue.state(),"globalSettings",page);
@@ -617,7 +671,7 @@ function getLayoutSettings(context,type) {
 				context.command.setValue_forKey_onLayer(verticalSpaceValue.stringValue(),"yPad",page);
 				context.command.setValue_forKey_onLayer(symbolMaxPerValue.stringValue(),"maxPer",page);
 				context.command.setValue_forKey_onLayer(renameSymbolsCheckbox.state(),"renameSymbols",page);
-				context.command.setValue_forKey_onLayer(0,"removeSymbols",page);
+				context.command.setValue_forKey_onLayer(zoomOutCheckbox.state(),"zoomOut",page);
 			}
 
 			return {
@@ -632,7 +686,7 @@ function getLayoutSettings(context,type) {
 				yPad : verticalSpaceValue.stringValue(),
 				maxPer : symbolMaxPerValue.stringValue(),
 				renameSymbols : renameSymbolsCheckbox.state(),
-				removeSymbols : removeSymbolsCheckbox.state()
+				zoomOut : zoomOutCheckbox.state()
 			}
 		} else return false;
 	}
@@ -651,7 +705,7 @@ function getLayoutSettings(context,type) {
 			yPad : defaultSettings.yPad,
 			maxPer : defaultSettings.maxPer,
 			renameSymbols : defaultSettings.renameSymbols,
-			removeSymbols : defaultSettings.removeSymbols
+			zoomOut : defaultSettings.zoomOut
 		}
 	}
 }

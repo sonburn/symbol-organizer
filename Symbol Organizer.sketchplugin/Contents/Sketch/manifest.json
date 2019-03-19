@@ -6,8 +6,7 @@
 			"shortcut" : "cmd option shift o",
 			"identifier" : "config",
 			"description" : "Configure and run Symbol Organizer.",
-			"script" : "script.cocoascript",
-			"icon" : "icon-sr.png",
+			"script" : "script.js",
 			"handler" : "config"
 		},
 		{
@@ -15,26 +14,32 @@
 			"shortcut" : "cmd option control o",
 			"identifier" : "run",
 			"description" : "Run Symbol Organizer using last settings.",
-			"script" : "script.cocoascript",
-			"icon" : "icon-sr.png",
+			"script" : "script.js",
 			"handler" : "run"
+		},
+		{
+			"name" : "Remove Unused Symbols",
+			"identifier" : "remove",
+			"description" : "Remove unused symbols on page.",
+			"script" : "script.js",
+			"handler" : "remove"
 		},
 		{
 			"name": "Report Issue",
 			"identifier": "report",
-			"script" : "script.cocoascript",
+			"script" : "script.js",
 			"handler": "report"
 		},
 		{
 			"name": "Other Plugins",
 			"identifier": "plugins",
-			"script" : "script.cocoascript",
+			"script" : "script.js",
 			"handler": "plugins"
 		},
 		{
 			"name": "Donate",
 			"identifier": "donate",
-			"script" : "script.cocoascript",
+			"script" : "script.js",
 			"handler": "donate"
 		}
 	],
@@ -43,6 +48,7 @@
 		"items" : [
 			"config",
 			"run",
+			"remove",
 			"-",
 			"report",
 			"plugins",
@@ -50,7 +56,7 @@
 		]
 	},
 	"identifier" : "com.sonburn.sketchplugins.symbol-organizer",
-	"version" : "15.7",
+	"version" : "15.8",
 	"description" : "Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.",
 	"authorEmail" : "jason.burns@synchronoss.com",
 	"name" : "Symbol Organizer",

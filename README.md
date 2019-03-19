@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **15.8** - Remove unused symbols is now invoked from the menu, and zoom out after organizing is now an option.
 * **15.7** - Improved handling for dark mode.
 * **15.6** - Fix for displaying titles in versions prior to Sketch 52.
 * **15.5** - The default font color for group titles will now change to white if using dark theme.
@@ -85,4 +86,4 @@ If you find this plugin helpful, or would like to support my plugins in general,
 
 # License
 
-Copyright (c) 2018 Jason Burns (Sonburn). See LICENSE.md for further details.
+Copyright (c) 2019 Jason Burns (Sonburn). See LICENSE.md for further details.

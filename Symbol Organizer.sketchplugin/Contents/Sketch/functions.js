@@ -169,16 +169,6 @@ function createCheckbox(item,flag,frame) {
 	return checkbox;
 }
 
-function displayDialog(title,body) {
-	if (MSApplicationMetadata.metadata().appVersion >= 50) {
-		const UI = require("sketch/ui");
-
-		UI.alert(title,body);
-	} else {
-		NSApplication.sharedApplication().displayDialog_withTitle(body,title);
-	}
-}
-
 function findLayerByName(scope,name,type) {
 	var scope = scope.layers();
 
@@ -225,7 +215,7 @@ function getTextStyleByName(context,styleName,removeStyle) {
 }
 
 function isUsingDarkTheme() {
-	return (NSUserDefaults.standardUserDefaults().stringForKey("AppleInterfaceStyle") == "Dark") ? true : false;
+	return (MSTheme.sharedTheme().isDark()) ? true : false;
 }
 
 function renameDuplicateSymbols(symbols) {
@@ -329,80 +319,16 @@ function sortLayerList(symbols,output) {
 	}
 }
 
-function removeUnusedSymbols(context,pluginDomain) {
-	var exemptSymbols = getExemptSymbols(context,pluginDomain),
-		removeSymbols = [],
-		listItemHeight = 24,
-		count = 0;
-
-	var predicate = NSPredicate.predicateWithFormat("className == %@ && isSafeToDelete == 1","MSSymbolMaster",pluginDomain),
-		symbols = context.document.currentPage().children().filteredArrayUsingPredicate(predicate),
-		loop = symbols.objectEnumerator(),
-		symbol;
-
-	while (symbol = loop.nextObject()) {
-		if (exemptSymbols.indexOf(String(symbol.symbolID())) == -1) removeSymbols.push(symbol);
-	}
-
-	var alertWindow = COSAlertWindow.new();
-	alertWindow.setIcon(NSImage.alloc().initByReferencingFile(context.plugin.urlForResourceNamed("icon.png").path()));
-	alertWindow.setMessageText("Remove Unused Symbols");
-
-	alertWindow.setInformativeText("The following symbols appear to be unused. Symbols which are nested in other symbols, or used as overrides, were ignored.");
-
-	var symbolListInnerFrameHeight = listItemHeight * (removeSymbols.length),
-		symbolListFrame = NSScrollView.alloc().initWithFrame(NSMakeRect(0,0,300,200)),
-		symbolListFrameSize = symbolListFrame.contentSize(),
-		symbolListInnerFrame = NSView.alloc().initWithFrame(NSMakeRect(0,0,symbolListFrameSize.width,symbolListInnerFrameHeight));
-
-	symbolListFrame.setHasVerticalScroller(true);
-	symbolListInnerFrame.setFlipped(true);
-	symbolListFrame.setDocumentView(symbolListInnerFrame);
-
-	for (var i = 0; i < removeSymbols.length; i++) {
-		symbolListInnerFrame.addSubview(createCheckbox({name:removeSymbols[i].name(),value:i},1,NSMakeRect(0,listItemHeight*count,300,listItemHeight)));
-		count++;
-	}
-
-	symbolListInnerFrame.scrollPoint(NSMakePoint(0,0));
-
-	alertWindow.addAccessoryView(symbolListFrame);
-
-	alertWindow.addButtonWithTitle("Remove Selected");
-	alertWindow.addButtonWithTitle("Keep All");
-
-	var responseCode = alertWindow.runModal();
-
-	if (responseCode == 1000) {
-		var symbolsToRemove = [];
-
-		for (var i = 0; i < removeSymbols.length; i++) {
-			if ([symbolListInnerFrame subviews][i].state() == 1) symbolsToRemove.push([symbolListInnerFrame subviews][i].tag());
-		}
-
-		for (var i = 0; i < symbolsToRemove.length; i++) {
-			var symbolIndex = symbolsToRemove[i],
-				symbolToRemove = removeSymbols[symbolIndex];
-
-			symbolToRemove.removeFromParent();
-
-			log(symbolToRemove.name() + " was removed by Symbol Organizer");
-		}
-
-		return symbolsToRemove.length;
-	} else return false;
-}
-
-function getExemptSymbols(context,pluginDomain) {
+function getExemptSymbols() {
 	var exemptSymbols = [],
 		overrideKey = "symbolID";
 
-	var pages = context.document.pages(),
+	var pages = MSDocument.currentDocument().pages(),
 		pageLoop = pages.objectEnumerator(),
 		page;
 
 	while (page = pageLoop.nextObject()) {
-		var predicate = NSPredicate.predicateWithFormat("className == %@ && overrides != nil","MSSymbolInstance",pluginDomain),
+		var predicate = NSPredicate.predicateWithFormat("className == %@ && overrides != nil","MSSymbolInstance"),
 			instancesWithOverrides = page.children().filteredArrayUsingPredicate(predicate),
 			loop = instancesWithOverrides.objectEnumerator(),
 			instance;
