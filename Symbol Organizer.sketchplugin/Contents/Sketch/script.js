@@ -284,7 +284,13 @@ var organize = function(context,type) {
 		if (layoutSettings.displayTitles == 1) {
 			// Add title group to page
 			page.addLayers([titleGroup]);
-			titleGroup.resizeToFitChildrenWithOption(0);
+
+			// Resize title group
+			if (sketch.version.sketch > 52) {
+				titleGroup.fixGeometryWithOptions(0);
+			} else {
+				titleGroup.resizeToFitChildrenWithOption(0);
+			}
 		}
 
 		// Collapse symbols
@@ -476,7 +482,7 @@ function getLayoutSettings(context,type) {
 			verticalSpaceValue.setStringValue(originalSettings.yPad);
 			symbolMaxPerValue.setStringValue(originalSettings.maxPer);
 			renameSymbolsCheckbox.setState(originalSettings.renameSymbols);
-			zoomOutCheckbox.setStringValue(originalSettings.zoomOut);
+			zoomOutCheckbox.setState(originalSettings.zoomOut);
 		});
 
 		settingY = CGRectGetMaxY(alertContent.subviews().lastObject().frame()) + settingPad;

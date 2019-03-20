@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **15.9** - Fix for Sketch 53; title group now requires fixGeometryWithOptions instead of resizeToFitChildrenWithOption.
 * **15.8** - Remove unused symbols is now invoked from the menu, and zoom out after organizing is now an option.
 * **15.7** - Improved handling for dark mode.
 * **15.6** - Fix for displaying titles in versions prior to Sketch 52.
