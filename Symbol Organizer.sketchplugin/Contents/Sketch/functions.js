@@ -460,13 +460,11 @@ function getUserDefaults(domain) {
 	return NSUserDefaults.alloc().initWithSuiteName(domain);
 }
 
-function updateSettingsWithDocument(context,settings) {
-	var page = context.document.currentPage();
-
+function updateSettingsWithDocument(settings) {
 	for (i in settings) {
-		var value = context.command.valueForKey_onLayer(i,page);
+		var value = sketch.Settings.layerSettingForKey(page,i);
 
-		if (value) settings[i] = value;
+		if (value != null) settings[i] = value;
 	}
 
 	return settings;

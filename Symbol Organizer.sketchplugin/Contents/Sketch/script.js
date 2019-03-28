@@ -1,6 +1,8 @@
 @import "functions.js";
 
 var sketch = require('sketch');
+var document = sketch.getSelectedDocument();
+var page = document.selectedPage;
 
 // Config
 var pluginName = "Symbol Organizer",
@@ -424,7 +426,7 @@ function getLayoutSettings(context,type) {
 	defaultSettings.zoomOut = 1;
 
 	// Get document settings
-	var documentSettings = updateSettingsWithDocument(context,defaultSettings);
+	var documentSettings = updateSettingsWithDocument(defaultSettings);
 
 	// If there are document settings, but no globalSettings value...
 	if (pageInfo && pageInfo[pluginDomain] && !pageInfo[pluginDomain]["globalSettings"]) {
@@ -468,7 +470,7 @@ function getLayoutSettings(context,type) {
 
 		globalSettingsValue.setAction("callAction:");
 		globalSettingsValue.setCOSJSTargetFunction(function(sender) {
-			var originalSettings = (sender.state() == 0) ? updateSettingsWithDocument(context,defaultSettings) : updateSettingsWithGlobal(getUserDefaults(pluginDomain),defaultSettings);
+			var originalSettings = (sender.state() == 0) ? updateSettingsWithDocument(defaultSettings) : updateSettingsWithGlobal(getUserDefaults(pluginDomain),defaultSettings);
 
 			groupGranularityValue.selectItemAtIndex(originalSettings.groupDepth);
 			groupDirectionValue.selectCellAtRow_column(originalSettings.sortDirection,0);
@@ -647,7 +649,7 @@ function getLayoutSettings(context,type) {
 
 		if (responseCode == 1000) {
 			if (globalSettingsValue.state() == 1) {
-				context.command.setValue_forKey_onLayer(globalSettingsValue.state(),"globalSettings",page);
+				sketch.Settings.setLayerSettingForKey(page,"globalSettings",globalSettingsValue.state());
 
 				var userDefaults = getUserDefaults(pluginDomain);
 
@@ -665,19 +667,19 @@ function getLayoutSettings(context,type) {
 				userDefaults.setObject_forKey(zoomOutCheckbox.state(),"zoomOut");
 				userDefaults.synchronize();
 			} else {
-				context.command.setValue_forKey_onLayer(globalSettingsValue.state(),"globalSettings",page);
-				context.command.setValue_forKey_onLayer(groupGranularityValue.indexOfSelectedItem(),"groupDepth",page);
-				context.command.setValue_forKey_onLayer(groupDirectionValue.selectedCell().tag(),"sortDirection",page);
-				context.command.setValue_forKey_onLayer(groupSpaceValue.stringValue(),"gPad",page);
-				context.command.setValue_forKey_onLayer(groupTitlesCheckbox.state(),"displayTitles",page);
-				context.command.setValue_forKey_onLayer(styleNameValue.stringValue(),"styleName",page);
-				context.command.setValue_forKey_onLayer(reverseOrderCheckbox.state(),"reverseOrder",page);
-				context.command.setValue_forKey_onLayer(gatherSymbolsCheckbox.state(),"gatherSymbols",page);
-				context.command.setValue_forKey_onLayer(horizontalSpaceValue.stringValue(),"xPad",page);
-				context.command.setValue_forKey_onLayer(verticalSpaceValue.stringValue(),"yPad",page);
-				context.command.setValue_forKey_onLayer(symbolMaxPerValue.stringValue(),"maxPer",page);
-				context.command.setValue_forKey_onLayer(renameSymbolsCheckbox.state(),"renameSymbols",page);
-				context.command.setValue_forKey_onLayer(zoomOutCheckbox.state(),"zoomOut",page);
+				sketch.Settings.setLayerSettingForKey(page,"globalSettings",globalSettingsValue.state());
+				sketch.Settings.setLayerSettingForKey(page,"groupDepth",groupGranularityValue.indexOfSelectedItem());
+				sketch.Settings.setLayerSettingForKey(page,"sortDirection",groupDirectionValue.selectedCell().tag());
+				sketch.Settings.setLayerSettingForKey(page,"gPad",groupSpaceValue.stringValue());
+				sketch.Settings.setLayerSettingForKey(page,"displayTitles",groupTitlesCheckbox.state());
+				sketch.Settings.setLayerSettingForKey(page,"styleName",styleNameValue.stringValue());
+				sketch.Settings.setLayerSettingForKey(page,"reverseOrder",reverseOrderCheckbox.state());
+				sketch.Settings.setLayerSettingForKey(page,"gatherSymbols",gatherSymbolsCheckbox.state());
+				sketch.Settings.setLayerSettingForKey(page,"xPad",horizontalSpaceValue.stringValue());
+				sketch.Settings.setLayerSettingForKey(page,"yPad",verticalSpaceValue.stringValue());
+				sketch.Settings.setLayerSettingForKey(page,"maxPer",symbolMaxPerValue.stringValue());
+				sketch.Settings.setLayerSettingForKey(page,"renameSymbols",renameSymbolsCheckbox.state());
+				sketch.Settings.setLayerSettingForKey(page,"zoomOut",zoomOutCheckbox.state());
 			}
 
 			return {
