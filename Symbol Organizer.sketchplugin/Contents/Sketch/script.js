@@ -426,7 +426,7 @@ function getLayoutSettings(context,type) {
 	defaultSettings.zoomOut = 1;
 
 	// Get document settings
-	var documentSettings = updateSettingsWithDocument(defaultSettings);
+	var documentSettings = updateSettingsWithDocument(context,defaultSettings);
 
 	// If there are document settings, but no globalSettings value...
 	if (pageInfo && pageInfo[pluginDomain] && !pageInfo[pluginDomain]["globalSettings"]) {
@@ -470,7 +470,7 @@ function getLayoutSettings(context,type) {
 
 		globalSettingsValue.setAction("callAction:");
 		globalSettingsValue.setCOSJSTargetFunction(function(sender) {
-			var originalSettings = (sender.state() == 0) ? updateSettingsWithDocument(defaultSettings) : updateSettingsWithGlobal(getUserDefaults(pluginDomain),defaultSettings);
+			var originalSettings = (sender.state() == 0) ? updateSettingsWithDocument(context,defaultSettings) : updateSettingsWithGlobal(getUserDefaults(pluginDomain),defaultSettings);
 
 			groupGranularityValue.selectItemAtIndex(originalSettings.groupDepth);
 			groupDirectionValue.selectCellAtRow_column(originalSettings.sortDirection,0);

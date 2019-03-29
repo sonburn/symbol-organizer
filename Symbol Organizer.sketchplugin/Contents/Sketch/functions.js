@@ -460,9 +460,15 @@ function getUserDefaults(domain) {
 	return NSUserDefaults.alloc().initWithSuiteName(domain);
 }
 
-function updateSettingsWithDocument(settings) {
+function updateSettingsWithDocument(context,settings) {
 	for (i in settings) {
-		var value = sketch.Settings.layerSettingForKey(page,i);
+		try {
+			var value = sketch.Settings.layerSettingForKey(page,i);
+		} catch (err) {
+			log('Could not JSON.parse value, using old method…');
+
+			var value = context.command.valueForKey_onLayer(i,page.sketchObject);
+		}
 
 		if (value != null) settings[i] = value;
 	}
