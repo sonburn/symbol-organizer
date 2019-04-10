@@ -6,6 +6,7 @@
 			"shortcut" : "cmd option shift o",
 			"identifier" : "config",
 			"description" : "Configure and run Symbol Organizer.",
+			"icon": "icons/icon.png",
 			"script" : "script.js",
 			"handler" : "config"
 		},
@@ -14,6 +15,7 @@
 			"shortcut" : "cmd option control o",
 			"identifier" : "run",
 			"description" : "Run Symbol Organizer using last settings.",
+			"icon": "icons/icon.png",
 			"script" : "script.js",
 			"handler" : "run"
 		},
@@ -21,24 +23,28 @@
 			"name" : "Remove Unused Symbols",
 			"identifier" : "remove",
 			"description" : "Remove unused symbols on page.",
+			"icon": "icons/icon.png",
 			"script" : "script.js",
 			"handler" : "remove"
 		},
 		{
 			"name": "Report Issue",
 			"identifier": "report",
+			"icon": "icons/icon.png",
 			"script" : "script.js",
 			"handler": "report"
 		},
 		{
 			"name": "Other Plugins",
 			"identifier": "plugins",
+			"icon": "icons/icon.png",
 			"script" : "script.js",
 			"handler": "plugins"
 		},
 		{
 			"name": "Donate",
 			"identifier": "donate",
+			"icon": "icons/icon.png",
 			"script" : "script.js",
 			"handler": "donate"
 		}
