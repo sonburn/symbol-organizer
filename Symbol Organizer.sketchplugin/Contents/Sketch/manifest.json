@@ -1,12 +1,19 @@
 {
+	"name" : "Symbol Organizer",
+	"description" : "Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.",
 	"author" : "Jason Burns",
+	"homepage" : "https://github.com/sonburn/symbol-organizer",
+	"version" : "15.11",
+	"identifier" : "com.sonburn.sketchplugins.symbol-organizer",
+	"appcast" : "https://raw.githubusercontent.com/sonburn/symbol-organizer/master/appcast.xml",
+	"icon" : "icon.png",
 	"commands" : [
 		{
 			"name" : "Configure Symbol Organizer",
 			"shortcut" : "cmd option shift o",
 			"identifier" : "config",
 			"description" : "Configure and run Symbol Organizer.",
-			"icon": "icon.png",
+			"icon" : "icon.png",
 			"script" : "script.js",
 			"handler" : "config"
 		},
@@ -15,7 +22,7 @@
 			"shortcut" : "cmd option control o",
 			"identifier" : "run",
 			"description" : "Run Symbol Organizer using last settings.",
-			"icon": "icon.png",
+			"icon" : "icon.png",
 			"script" : "script.js",
 			"handler" : "run"
 		},
@@ -23,30 +30,33 @@
 			"name" : "Remove Unused Symbols",
 			"identifier" : "remove",
 			"description" : "Remove unused symbols on page.",
-			"icon": "icon.png",
+			"icon" : "icon.png",
 			"script" : "script.js",
 			"handler" : "remove"
 		},
 		{
-			"name": "Report Issue",
-			"identifier": "report",
-			"icon": "icon.png",
+			"name" : "Report Issue",
+			"identifier" : "report",
+			"description" : "Report an issue with Symbol Organizer.",
+			"icon" : "icon.png",
 			"script" : "script.js",
-			"handler": "report"
+			"handler" : "report"
 		},
 		{
-			"name": "Other Plugins",
-			"identifier": "plugins",
-			"icon": "icon.png",
+			"name" : "Other Plugins",
+			"identifier" : "plugins",
+			"description" : "View all of Sonburn's plugins.",
+			"icon" : "icon.png",
 			"script" : "script.js",
-			"handler": "plugins"
+			"handler" : "plugins"
 		},
 		{
-			"name": "Donate",
-			"identifier": "donate",
-			"icon": "icon.png",
+			"name" : "Donate",
+			"identifier" : "donate",
+			"description" : "Donate to the development of Symbol Organizer.",
+			"icon" : "icon.png",
 			"script" : "script.js",
-			"handler": "donate"
+			"handler" : "donate"
 		}
 	],
 	"menu" : {
@@ -60,13 +70,5 @@
 			"plugins",
 			"donate"
 		]
-	},
-	"identifier" : "com.sonburn.sketchplugins.symbol-organizer",
-	"version" : "15.11",
-	"description" : "Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.",
-	"authorEmail" : "jason.burns@synchronoss.com",
-	"name" : "Symbol Organizer",
-	"icon" : "icon.png",
-	"appcast" : "https://raw.githubusercontent.com/sonburn/symbol-organizer/master/appcast.xml",
-	"homepage" : "https://github.com/sonburn/symbol-organizer"
+	}
 }
