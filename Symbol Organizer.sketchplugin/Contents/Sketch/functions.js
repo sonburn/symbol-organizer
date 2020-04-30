@@ -311,12 +311,10 @@ function createGroupObject(symbols,depth) {
 }
 
 function sortLayerList(symbols,output) {
-	var loop = symbols.objectEnumerator(), symbol;
-
-	while (symbol = loop.nextObject()) {
+	symbols.forEach((symbol,i) => {
 		symbol.moveToLayer_beforeLayer(output,nil);
-		symbol.select_byExpandingSelection(false,true);
-	}
+		symbol.select_byExtendingSelection(0,1);
+	});
 }
 
 function getExemptSymbols() {

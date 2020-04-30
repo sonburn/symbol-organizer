@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **15.12** - Fix for sort failing in Sketch 65.
 * **15.11** - Fix for custom style names not being parsed properly using new setting retrieval method.
 * **15.10** - Improved handling of setting/retrieving page specific settings.
 * **15.9** - Fix for Sketch 53; title group now requires fixGeometryWithOptions instead of resizeToFitChildrenWithOption.

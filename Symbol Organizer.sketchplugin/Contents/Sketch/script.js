@@ -74,7 +74,9 @@ var organize = function(context,type) {
 		var symbols = (layoutSettings.gatherSymbols == 1) ? (MSApplicationMetadata.metadata().appVersion > 46) ? context.document.documentData().localSymbols() : context.document.documentData().allSymbols() : page.symbols();
 
 		// Sort the symbols object by name
-		symbols.sort(sortSymbolsByName);
+		var symbolSort = NSSortDescriptor.sortDescriptorWithKey_ascending('name',1);
+		symbols = symbols.sortedArrayUsingDescriptors([symbolSort]);
+		//symbols.sort(sortSymbolsByName);
 
 		// if user wants to rename duplicate symbols...
 		if (layoutSettings.renameSymbols == 1) {
@@ -301,7 +303,11 @@ var organize = function(context,type) {
 		// If user wants to zoom out...
 		if (layoutSettings.zoomOut == 1) {
 			// Adjust view
-			context.document.contentDrawView().zoomToFitRect(page.contentBounds());
+			if (sketch.version.sketch > 64) {
+				context.document.canvasView().zoomToFitRect(page.contentBounds());
+			} else {
+				context.document.contentDrawView().zoomToFitRect(page.contentBounds());
+			}
 		}
 
 		// Feedback to user
