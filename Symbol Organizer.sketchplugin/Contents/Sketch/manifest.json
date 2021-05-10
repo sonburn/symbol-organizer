@@ -3,7 +3,7 @@
 	"description" : "Organize your symbols page, and layer list, alphabetically and into groupings determined by your symbol names.",
 	"author" : "Jason Burns",
 	"homepage" : "https://github.com/sonburn/symbol-organizer",
-	"version" : "15.12",
+	"version" : "15.13",
 	"identifier" : "com.sonburn.sketchplugins.symbol-organizer",
 	"appcast" : "https://raw.githubusercontent.com/sonburn/symbol-organizer/master/appcast.xml",
 	"icon" : "icon.png",

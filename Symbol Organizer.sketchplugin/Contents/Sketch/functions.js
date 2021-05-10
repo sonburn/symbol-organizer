@@ -1,3 +1,5 @@
+var sketchVersion = (typeof BCSketchInfo !== 'undefined') ? BCSketchInfo.shared().metadata().appVersion : MSApplicationMetadata.metadata().appVersion
+
 function actionWithType(context,type) {
 	var controller = context.document.actionsController();
 
@@ -11,7 +13,6 @@ function actionWithType(context,type) {
 }
 
 function addTextStyle(context,styleName,theStyle) {
-	var sketchVersion = MSApplicationMetadata.metadata().appVersion;
 	var textStyles = context.document.documentData().layerTextStyles();
 
 	if (textStyles.addSharedStyleWithName_firstInstance) {
@@ -424,7 +425,7 @@ function googleAnalytics(context,category,action,label,value) {
 	// Tracking ID
 	url += "&tid=" + trackingID;
 	// Source
-	url += "&ds=sketch" + MSApplicationMetadata.metadata().appVersion;
+	url += "&ds=sketch" + sketchVersion;
 	// Client ID
 	url += "&cid=" + uuid;
 	// pageview, screenview, event, transaction, item, social, exception, timing

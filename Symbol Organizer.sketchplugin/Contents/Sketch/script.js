@@ -71,7 +71,7 @@ var organize = function(context,type) {
 		if (titleGroup) page.removeLayer(titleGroup);
 
 		// Create a symbols object, of either all symbols or just Symbols page symbols
-		var symbols = (layoutSettings.gatherSymbols == 1) ? (MSApplicationMetadata.metadata().appVersion > 46) ? context.document.documentData().localSymbols() : context.document.documentData().allSymbols() : page.symbols();
+		var symbols = (layoutSettings.gatherSymbols == 1) ? (sketchVersion > 46) ? context.document.documentData().localSymbols() : context.document.documentData().allSymbols() : page.symbols();
 
 		// Sort the symbols object by name
 		var symbolSort = NSSortDescriptor.sortDescriptorWithKey_ascending('name',1);

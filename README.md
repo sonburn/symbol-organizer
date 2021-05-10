@@ -40,6 +40,7 @@ To find your plugins directory...
 
 # Changelog
 
+* **15.13** - Fix for Sketch 72.
 * **15.12** - Fix for sort failing in Sketch 65.
 * **15.11** - Fix for custom style names not being parsed properly using new setting retrieval method.
 * **15.10** - Improved handling of setting/retrieving page specific settings.
@@ -90,4 +91,4 @@ If you find this plugin helpful, or would like to support my plugins in general,
 
 # License
 
-Copyright (c) 2019 Jason Burns (Sonburn). See LICENSE.md for further details.
+Copyright (c) 2021 Jason Burns (Sonburn). See LICENSE.md for further details.
